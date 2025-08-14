@@ -1,0 +1,13 @@
+# This is a placeholder for an Excel file
+# The actual Excel file should have these columns:
+# Route, Departure, Arrival, Capacity, Available, Price/Ton, Contact, Date
+# 
+# Example data:
+# Route: Delhi - Mumbai
+# Departure: 08:00
+# Arrival: 18:00
+# Capacity: 50
+# Available: 35
+# Price/Ton: 2000
+# Contact: 9876543210
+# Date: 2025-08-15
