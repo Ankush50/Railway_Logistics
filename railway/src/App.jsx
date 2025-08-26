@@ -11,6 +11,8 @@ import {
   Edit,
   Trash2,
   Eye,
+  CheckCircle,
+  EyeOff,
   LogOut,
   LogIn,
   UserPlus,
@@ -85,6 +87,12 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  // Booking UI states
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const [bookingQuantity, setBookingQuantity] = useState("");
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(null);
 
   // Check for existing token on app load
   useEffect(() => {
@@ -153,6 +161,7 @@ function App() {
     });
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async () => {
       if (!loginForm.username || !loginForm.password) {
@@ -214,15 +223,29 @@ function App() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={loginForm.password}
-                onChange={(e) =>
-                  setLoginForm({ ...loginForm, password: e.target.value })
-                }
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={loginForm.password}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, password: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
@@ -269,6 +292,8 @@ function App() {
     });
     const [registerLoading, setRegisterLoading] = useState(false);
     const [registerError, setRegisterError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleRegister = async () => {
       // Validation
@@ -374,33 +399,61 @@ function App() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                placeholder="Create a password"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                value={registerForm.password}
-                onChange={(e) =>
-                  setRegisterForm({ ...registerForm, password: e.target.value })
-                }
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  value={registerForm.password}
+                  onChange={(e) =>
+                    setRegisterForm({ ...registerForm, password: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Confirm Password
               </label>
-              <input
-                type="password"
-                placeholder="Confirm your password"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                value={registerForm.confirmPassword}
-                onChange={(e) =>
-                  setRegisterForm({
-                    ...registerForm,
-                    confirmPassword: e.target.value,
-                  })
-                }
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  value={registerForm.confirmPassword}
+                  onChange={(e) =>
+                    setRegisterForm({
+                      ...registerForm,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div>
@@ -642,7 +695,7 @@ function App() {
           ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
           : 'bg-white border-gray-200 hover:bg-gray-50'
       }`}>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
             <h4 className={`text-xl font-bold mb-3 ${
               isDark ? 'text-white' : 'text-gray-800'
@@ -668,7 +721,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg gap-4">
                 <CreditCard className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
@@ -676,15 +729,15 @@ function App() {
                     ₹{service.pricePerTon}/ton
                   </p>
                 </div>
+                <button
+                  onClick={() => onBook(service)}
+                  className="ml-auto bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow hover:shadow-md font-medium"
+                >
+                  Book
+                </button>
               </div>
             </div>
           </div>
-          <button
-            onClick={() => onBook(service)}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-          >
-            Book Now
-          </button>
         </div>
       </div>
     );
@@ -853,7 +906,7 @@ function App() {
                 Manage railway services and system data
               </p>
             </div>
-            <div className="space-x-3">
+            <div className="flex flex-wrap gap-3 justify-end">
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center ${
@@ -1282,15 +1335,7 @@ function App() {
               ))}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center px-3 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Logout
-              </button>
-            </div>
+            {/* Logout moved to profile modal */}
           </nav>
         </div>
       </>
@@ -1368,10 +1413,10 @@ function App() {
 
               <div className="pt-4">
                 <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  onClick={() => { setShowProfileModal(false); handleLogout(); }}
+                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
                 >
-                  Close
+                  <LogOut className="h-5 w-5 mr-2" /> Logout
                 </button>
               </div>
             </div>
@@ -1381,30 +1426,45 @@ function App() {
     );
   };
 
-  // Handle booking
-  const handleBookService = async (service) => {
-    const quantity = prompt("Enter quantity in tons:");
-    if (quantity && !isNaN(quantity)) {
-      try {
-        setLoading(true);
-        const bookingData = {
-          serviceId: service._id,
-          quantity: parseInt(quantity),
-          total: parseInt(quantity) * service.pricePerTon,
-        };
+  // Handle booking (open modal)
+  const handleBookService = (service) => {
+    setSelectedService(service);
+    setBookingQuantity("");
+    setBookingModalOpen(true);
+  };
 
-        await createBooking(bookingData);
-        await loadBookings(); // Reload bookings
-        await loadServices(); // Reload services to update availability
-
-        alert(`Booking confirmed! Total: ₹${bookingData.total}`);
-        setCurrentView("bookings");
-      } catch (error) {
-        console.error("Booking failed:", error);
-        alert("Booking failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+  const submitBooking = async () => {
+    if (!selectedService) return;
+    const quantityNum = parseInt(bookingQuantity);
+    if (!quantityNum || quantityNum <= 0) {
+      setError("Please enter a valid quantity in tons");
+      return;
+    }
+    if (quantityNum > selectedService.available) {
+      setError("Quantity exceeds available capacity");
+      return;
+    }
+    try {
+      setBookingSubmitting(true);
+      const bookingData = {
+        serviceId: selectedService._id,
+        quantity: quantityNum,
+        total: quantityNum * selectedService.pricePerTon,
+      };
+      await createBooking(bookingData);
+      await loadBookings();
+      await loadServices();
+      setBookingModalOpen(false);
+      setBookingSuccess({
+        route: selectedService.route,
+        quantity: quantityNum,
+        total: bookingData.total,
+      });
+    } catch (error) {
+      console.error("Booking failed:", error);
+      setError("Booking failed. Please try again.");
+    } finally {
+      setBookingSubmitting(false);
     }
   };
 
@@ -1448,10 +1508,10 @@ function App() {
         isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       } shadow-sm`}>
         <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
-          {/* Mobile menu button */}
+          {/* Menu button (enabled on desktop as well) */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -1537,6 +1597,130 @@ function App() {
 
       {/* Profile Modal */}
       <ProfileModal />
+
+      {/* Booking Modal */}
+      {bookingModalOpen && selectedService && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${
+            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Book Service</h3>
+                <button
+                  onClick={() => setBookingModalOpen(false)}
+                  className={`p-2 rounded-lg ${isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-3 mb-4">
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Route</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedService.route}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Available</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedService.available} tons</p>
+                </div>
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Price</p>
+                  <p className={`font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>₹{selectedService.pricePerTon}/ton</p>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Quantity (tons)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedService.available}
+                    value={bookingQuantity}
+                    onChange={(e) => setBookingQuantity(e.target.value)}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                      isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    placeholder="Enter quantity"
+                  />
+                </div>
+                {bookingQuantity && parseInt(bookingQuantity) > 0 && (
+                  <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
+                    <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>Estimated Total</p>
+                    <p className={`text-xl font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>
+                      ₹{(parseInt(bookingQuantity) || 0) * selectedService.pricePerTon}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setBookingModalOpen(false)}
+                  className={`px-5 py-2 rounded-lg font-medium ${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitBooking}
+                  disabled={bookingSubmitting}
+                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {bookingSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Booking...
+                    </>
+                  ) : (
+                    'Confirm Booking'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Success Modal */}
+      {bookingSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden text-center ${
+            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          }`}>
+            <div className={`p-8 ${isDark ? 'bg-gradient-to-br from-emerald-900/40 to-blue-900/30' : 'bg-gradient-to-br from-emerald-50 to-blue-50'}`}>
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className={`text-3xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Hurray!</h3>
+              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-6`}>Your booking has been confirmed.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-6">
+                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Route</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{bookingSuccess.route}</p>
+                </div>
+                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Quantity</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{bookingSuccess.quantity} tons</p>
+                </div>
+                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Total</p>
+                  <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>₹{bookingSuccess.total}</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
+                <button
+                  onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  View My Bookings
+                </button>
+                <button
+                  onClick={() => setBookingSuccess(null)}
+                  className={isDark ? 'bg-gray-700 text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-600' : 'bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200'}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
