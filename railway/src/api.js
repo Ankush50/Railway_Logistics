@@ -83,6 +83,17 @@ export const getUserBookings = async () => {
   return response.data.data;
 };
 
+// Admin Bookings
+export const getAllBookings = async () => {
+  const response = await axios.get(`${API_URL}/bookings/all`);
+  return response.data.data;
+};
+
+export const updateBookingStatus = async (id, status) => {
+  const response = await axios.put(`${API_URL}/bookings/${id}/status`, { status });
+  return response.data.data;
+};
+
 // Upload API
 export const uploadExcel = async (file) => {
   const formData = new FormData();
