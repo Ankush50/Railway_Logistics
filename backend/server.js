@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const { 
   securityMiddleware, 
@@ -107,6 +108,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400 // 24 hours
 }));
+
+// Parse cookies for httpOnly auth
+app.use(cookieParser());
 
 // Body parsing with balanced limits
 app.use(express.json({ 
