@@ -5,7 +5,10 @@ const User = require('../models/User');
 exports.protect = async (req, res, next) => {
   let token;
   
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  // Prefer httpOnly cookie set by server
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
   
