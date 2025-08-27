@@ -1,17 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const setAuthCookie = (res, token) => {
-  const isProd = process.env.NODE_ENV === 'production';
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/',
-  });
-};
-
 // Register a new user
 exports.register = async (req, res, next) => {
   try {
@@ -31,8 +20,7 @@ exports.register = async (req, res, next) => {
       expiresIn: process.env.JWT_EXPIRE
     });
 
-    setAuthCookie(res, token);
-    res.status(201).json({ success: true, user });
+    res.status(201).json({ success: true, token, user });
   } catch (err) {
     next(err);
   }
@@ -60,8 +48,7 @@ exports.login = async (req, res, next) => {
       expiresIn: process.env.JWT_EXPIRE
     });
 
-    setAuthCookie(res, token);
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ success: true, token, user });
   } catch (err) {
     next(err);
   }
@@ -75,15 +62,4 @@ exports.getMe = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-};
-
-// Logout - clear cookie
-exports.logout = async (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
-  });
-  res.status(200).json({ success: true });
 };

@@ -25,7 +25,7 @@ import {
   Moon,
   Home,
   Settings,
-  IndianRupee,
+  CreditCard,
   Phone,
   Mail,
   MapPin as LocationIcon,
@@ -43,8 +43,6 @@ import {
   createBooking,
   getUserBookings,
   uploadExcel,
-  getAllBookings,
-  updateBookingStatus,
 } from "./api";
 
 // Theme Context
@@ -724,7 +722,7 @@ function App() {
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg gap-4">
-                <IndianRupee className="h-5 w-5 mr-3 text-blue-500" />
+                <CreditCard className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
                   <p className={`font-bold text-lg ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
@@ -748,7 +746,6 @@ function App() {
   // Admin Panel Component
   const AdminPanel = () => {
     const [showAddForm, setShowAddForm] = useState(false);
-    const [showBookings, setShowBookings] = useState(false);
     const [editingService, setEditingService] = useState(null);
     const [newService, setNewService] = useState({
       route: "",
@@ -761,38 +758,6 @@ function App() {
       date: "",
     });
     const [adminLoading, setAdminLoading] = useState(false);
-    const [allBookings, setAllBookings] = useState([]);
-
-    useEffect(() => {
-      if (showBookings) {
-        (async () => {
-          try {
-            setAdminLoading(true);
-            const list = await getAllBookings();
-            setAllBookings(list);
-          } catch (e) {
-            console.error('Failed to load bookings', e);
-            alert('Failed to load bookings');
-          } finally {
-            setAdminLoading(false);
-          }
-        })();
-      }
-    }, [showBookings]);
-
-    const handleUpdateBookingStatus = async (id, status) => {
-      try {
-        setAdminLoading(true);
-        await updateBookingStatus(id, status);
-        const list = await getAllBookings();
-        setAllBookings(list);
-      } catch (e) {
-        console.error('Failed to update status', e);
-        alert('Failed to update status');
-      } finally {
-        setAdminLoading(false);
-      }
-    };
 
     // Check if user is admin
     if (currentUser.role !== "admin") {
@@ -952,17 +917,6 @@ function App() {
               >
                 <Plus className="mr-2 h-5 w-5" />
                 {showAddForm ? 'Cancel' : 'Add Service'}
-              </button>
-              <button
-                onClick={() => setShowBookings(!showBookings)}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center ${
-                  showBookings
-                    ? 'bg-gray-500 text-white hover:bg-gray-600'
-                    : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800'
-                }`}
-              >
-                <Eye className="mr-2 h-5 w-5" />
-                {showBookings ? 'Hide Bookings' : 'View Bookings'}
               </button>
               <button
                 onClick={() => {
@@ -1226,71 +1180,6 @@ function App() {
               </tbody>
             </table>
           </div>
-
-          {/* Admin Bookings List */}
-          {showBookings && (
-            <div className="overflow-x-auto mt-10">
-              <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>All Bookings</h3>
-              <table className="w-full table-auto">
-                <thead className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <tr>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>User</th>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Route</th>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Qty</th>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Total</th>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Status</th>
-                    <th className={`px-6 py-4 text-left text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${isDark ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-gray-200'}`}>
-                  {allBookings.map((b) => (
-                    <tr key={b._id} className={`hover:${isDark ? 'bg-gray-700' : 'bg-gray-50'} transition-colors`}>
-                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{b.userId?.name || '—'}</span>
-                          <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{b.userId?.email || b.userId?.username}</span>
-                        </div>
-                      </td>
-                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{b.route}</td>
-                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{b.quantity}t</td>
-                      <td className={`px-6 py-3 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{b.total}</td>
-                      <td className={`px-6 py-3 text-sm`}>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          b.status === 'Confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                          b.status === 'Declined' || b.status === 'Cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
-                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                        }`}>
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-sm">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleUpdateBookingStatus(b._id, 'Confirmed')}
-                            className="px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUpdateBookingStatus(b._id, 'Declined')}
-                            className="px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700"
-                          >
-                            Decline
-                          </button>
-                          <button
-                            onClick={() => handleUpdateBookingStatus(b._id, 'Cancelled')}
-                            className={isDark ? 'px-3 py-1 rounded-lg bg-gray-700 text-gray-100 hover:bg-gray-600' : 'px-3 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200'}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -1355,7 +1244,7 @@ function App() {
                           </div>
                         </div>
                         <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <IndianRupee className="h-5 w-5 mr-3 text-green-500" />
+                          <CreditCard className="h-5 w-5 mr-3 text-green-500" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
                             <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
@@ -1375,11 +1264,9 @@ function App() {
                       </div>
                     </div>
                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                      (booking.status || '').toLowerCase() === 'confirmed' 
+                      booking.status === 'confirmed' 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                        : (booking.status || '').toLowerCase() === 'declined' || (booking.status || '').toLowerCase() === 'cancelled'
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                     }`}>
                       {booking.status}
                     </span>
