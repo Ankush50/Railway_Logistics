@@ -43,6 +43,8 @@ import {
   deleteService,
   createBooking,
   getUserBookings,
+  getAllBookings,
+  updateBookingStatus,
   uploadExcel,
 } from "./api";
 
@@ -146,8 +148,8 @@ function App() {
   const loadBookings = async () => {
     try {
       setLoading(true);
-      const userBookings = await getUserBookings();
-      setBookings(userBookings);
+      const list = currentUser?.role === 'admin' ? await getAllBookings() : await getUserBookings();
+      setBookings(list);
     } catch (error) {
       console.error("Failed to load bookings:", error);
       setError("Failed to load bookings");
@@ -1210,7 +1212,7 @@ function App() {
             <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
               <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            My Bookings
+            {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
           </h2>
           
           {loading ? (
@@ -1224,7 +1226,7 @@ function App() {
                 <Package className="h-12 w-12 text-gray-400 dark:text-gray-500" />
               </div>
               <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
-                No bookings yet. Search for services to get started!
+                No bookings yet.
               </p>
             </div>
           ) : (
@@ -1275,13 +1277,33 @@ function App() {
                         </div>
                       </div>
                     </div>
-                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                      booking.status === 'confirmed' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                    }`}>
-                      {booking.status}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        booking.status === 'Confirmed'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          : booking.status === 'Declined'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                      }`}>
+                        {booking.status}
+                      </span>
+                      {currentUser?.role === 'admin' && booking.status === 'Pending' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => { await updateBookingStatus(booking._id, 'Confirmed'); await loadBookings(); }}
+                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={async () => { await updateBookingStatus(booking._id, 'Declined'); await loadBookings(); }}
+                            className="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
