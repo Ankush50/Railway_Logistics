@@ -21,6 +21,9 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
+// Trust proxy for rate limiting (important for production deployments)
+app.set('trust proxy', 1);
+
 // Apply security middleware first
 app.use(securityMiddleware);
 app.use(securityLogger);
@@ -71,7 +74,11 @@ const strictLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
-  skipFailedRequests: false
+  skipFailedRequests: false,
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For if available, fallback to req.ip
+    return req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+  }
 });
 
 const authLimiter = rateLimit({
@@ -81,7 +88,11 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
-  skipFailedRequests: false
+  skipFailedRequests: false,
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For if available, fallback to req.ip
+    return req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+  }
 });
 
 // Apply rate limiting
@@ -137,11 +148,30 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// 404 handler
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 404 handler - More informative
 app.use('*', (req, res) => {
+  console.log(`404 - Route not found: ${req.method} ${req.url}`);
   res.status(404).json({ 
     success: false, 
-    message: 'Route not found' 
+    message: 'Route not found',
+    path: req.url,
+    method: req.method,
+    availableRoutes: [
+      '/health',
+      '/api/auth/*',
+      '/api/services/*',
+      '/api/bookings/*',
+      '/api/upload/*'
+    ]
   });
 });
 

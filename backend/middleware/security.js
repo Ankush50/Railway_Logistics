@@ -26,7 +26,7 @@ const securityMiddleware = (req, res, next) => {
   next();
 };
 
-// Request logging for security monitoring
+// Request logging for security monitoring - Less verbose
 const securityLogger = (req, res, next) => {
   const start = Date.now();
   
@@ -43,13 +43,15 @@ const securityLogger = (req, res, next) => {
       userId: req.user ? req.user.id : 'anonymous'
     };
     
-    // Log suspicious activities
-    if (res.statusCode >= 400) {
+    // Only log warnings for actual errors (not 404s for root path)
+    if (res.statusCode >= 400 && req.url !== '/') {
       console.warn('Security Warning:', logData);
     }
     
-    // Log all requests for monitoring
-    console.log('Request:', logData);
+    // Log all requests but less verbose for normal operations
+    if (res.statusCode >= 400 || req.url === '/health' || req.url.startsWith('/api/')) {
+      console.log('Request:', logData);
+    }
   });
   
   next();
