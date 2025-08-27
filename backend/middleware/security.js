@@ -9,7 +9,11 @@ const securityMiddleware = (req, res, next) => {
   res.set('X-Frame-Options', 'DENY');
   res.set('X-XSS-Protection', '1; mode=block');
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');
+  res.set('X-Permitted-Cross-Domain-Policies', 'none');
+  res.set('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.set('Cross-Origin-Opener-Policy', 'same-origin');
+  res.set('Cross-Origin-Resource-Policy', 'same-origin');
   
   // Prevent clickjacking
   res.set('X-Frame-Options', 'DENY');
@@ -104,9 +108,82 @@ const validateOrigin = (req, res, next) => {
   next();
 };
 
+// Anti-phishing protection
+const antiPhishingProtection = (req, res, next) => {
+  // Block requests with suspicious patterns
+  const suspiciousPatterns = [
+    /password/i,
+    /credit.?card/i,
+    /ssn/i,
+    /social.?security/i,
+    /bank.?account/i,
+    /routing.?number/i,
+    /account.?number/i,
+    /pin/i,
+    /cvv/i,
+    /expiry/i
+  ];
+  
+  const url = req.url.toLowerCase();
+  const body = JSON.stringify(req.body || {}).toLowerCase();
+  
+  const hasSuspiciousContent = suspiciousPatterns.some(pattern => 
+    pattern.test(url) || pattern.test(body)
+  );
+  
+  if (hasSuspiciousContent && !req.path.startsWith('/api/auth/')) {
+    console.warn('Potential phishing attempt detected:', {
+      url: req.url,
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+    
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied - suspicious request pattern detected'
+    });
+  }
+  
+  next();
+};
+
+// Block file upload attacks
+const blockFileUploadAttacks = (req, res, next) => {
+  if (req.files || req.file) {
+    const files = req.files || [req.file];
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    
+    const hasInvalidFile = files.some(file => {
+      if (!file.mimetype || !allowedTypes.includes(file.mimetype)) {
+        console.warn('Invalid file type attempted:', file.mimetype);
+        return true;
+      }
+      return false;
+    });
+    
+    if (hasInvalidFile) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file type - only images, PDFs, and Excel files allowed'
+      });
+    }
+  }
+  
+  next();
+};
+
 module.exports = {
   securityMiddleware,
   securityLogger,
   blockSuspiciousUserAgents,
-  validateOrigin
+  validateOrigin,
+  antiPhishingProtection,
+  blockFileUploadAttacks
 };

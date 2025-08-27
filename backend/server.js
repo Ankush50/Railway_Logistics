@@ -9,7 +9,9 @@ const {
   securityMiddleware, 
   securityLogger, 
   blockSuspiciousUserAgents, 
-  validateOrigin 
+  validateOrigin,
+  antiPhishingProtection,
+  blockFileUploadAttacks
 } = require('./middleware/security');
 
 const authRoutes = require('./routes/authRoutes');
@@ -24,6 +26,8 @@ app.use(securityMiddleware);
 app.use(securityLogger);
 app.use(blockSuspiciousUserAgents);
 app.use(validateOrigin);
+app.use(antiPhishingProtection);
+app.use(blockFileUploadAttacks);
 
 // Security middleware - Configure Helmet with strict settings
 app.use(helmet({
