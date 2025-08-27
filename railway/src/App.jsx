@@ -1212,7 +1212,7 @@ function App() {
             <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
               <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
+            {currentUser?.role === 'admin' ? 'User Bookings' : 'My Bookings'}
           </h2>
           
           {loading ? (
@@ -1275,6 +1275,14 @@ function App() {
                             </p>
                           </div>
                         </div>
+                        {currentUser?.role === 'admin' && (
+                          <div className="md:col-span-3 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
+                            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>User</p>
+                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {booking.userId?.name} ({booking.userId?.username}) — {booking.userId?.email}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1318,7 +1326,7 @@ function App() {
   const Sidebar = () => {
     const navItems = [
       { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
-      { id: "bookings", label: "My Bookings", icon: Eye, color: "text-green-600" },
+      { id: "bookings", label: currentUser?.role === 'admin' ? "User Bookings" : "My Bookings", icon: Eye, color: "text-green-600" },
       ...(currentUser?.role === "admin" ? [{ id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }] : []),
     ];
 
@@ -1556,7 +1564,7 @@ function App() {
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {currentView === "search" && "Search Services"}
-              {currentView === "bookings" && "My Bookings"}
+              {currentView === "bookings" && (currentUser?.role === 'admin' ? 'User Bookings' : 'My Bookings')}
               {currentView === "admin" && "Admin Panel"}
             </h1>
           </div>
