@@ -15,7 +15,7 @@ const getDefaultApiUrl = () => {
 const API_URL = getDefaultApiUrl();
 
 // Set auth token
-const setAuthToken = (token) => {
+export const setAuthToken = (token) => {
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
@@ -25,6 +25,18 @@ const setAuthToken = (token) => {
 
 // Use httpOnly cookie auth; include credentials
 import.meta && (axios.defaults.withCredentials = true);
+
+// Initialize auth header from localStorage on module load (browser only)
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const existingToken = window.localStorage.getItem('token');
+    if (existingToken) {
+      setAuthToken(existingToken);
+    }
+  }
+} catch (_) {
+  // ignore storage access errors
+}
 
 // Auth API
 export const register = async (userData) => {
