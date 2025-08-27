@@ -6,7 +6,7 @@ const bookingSchema = new mongoose.Schema({
   route: { type: String, required: true },
   quantity: { type: Number, required: true },
   total: { type: Number, required: true },
-  status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled'], default: 'Pending' },
+  status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled', 'Declined'], default: 'Pending' },
   date: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
