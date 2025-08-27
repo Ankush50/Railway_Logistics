@@ -11,9 +11,8 @@ const securityMiddleware = (req, res, next) => {
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');
   res.set('X-Permitted-Cross-Domain-Policies', 'none');
-  res.set('Cross-Origin-Embedder-Policy', 'require-corp');
   res.set('Cross-Origin-Opener-Policy', 'same-origin');
-  res.set('Cross-Origin-Resource-Policy', 'same-origin');
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
   
   // Prevent clickjacking
   res.set('X-Frame-Options', 'DENY');
@@ -56,49 +55,54 @@ const securityLogger = (req, res, next) => {
   next();
 };
 
-// Block suspicious user agents
+// Block suspicious user agents - Less aggressive
 const blockSuspiciousUserAgents = (req, res, next) => {
   const userAgent = req.get('User-Agent') || '';
-  const suspiciousPatterns = [
-    /bot/i,
-    /crawler/i,
-    /spider/i,
-    /scraper/i,
-    /curl/i,
-    /wget/i,
-    /python/i,
-    /java/i,
-    /perl/i,
-    /ruby/i,
-    /php/i,
-    /go-http-client/i,
-    /http-client/i,
-    /okhttp/i,
-    /apache-httpclient/i
+  
+  // Only block obviously malicious user agents
+  const maliciousPatterns = [
+    /sqlmap/i,
+    /nikto/i,
+    /nmap/i,
+    /w3af/i,
+    /burpsuite/i,
+    /zap/i,
+    /acunetix/i,
+    /nessus/i,
+    /openvas/i,
+    /metasploit/i
   ];
   
-  const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(userAgent));
+  const isMalicious = maliciousPatterns.some(pattern => pattern.test(userAgent));
   
-  if (isSuspicious && !req.path.startsWith('/api/')) {
+  if (isMalicious) {
+    console.warn('Malicious user agent blocked:', userAgent);
     return res.status(403).json({
       success: false,
-      message: 'Access denied for automated requests'
+      message: 'Access denied - malicious request detected'
     });
   }
   
   next();
 };
 
-// Validate request origin
+// Validate request origin - Less restrictive
 const validateOrigin = (req, res, next) => {
   const origin = req.get('Origin');
   const allowedOrigins = [
     'https://turbotransit1.netlify.app',
     'http://localhost:3000',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:5000'
   ];
   
-  if (origin && !allowedOrigins.includes(origin)) {
+  // Allow requests without origin header (like direct API calls)
+  if (!origin) {
+    return next();
+  }
+  
+  if (!allowedOrigins.includes(origin)) {
+    console.warn('Origin not allowed:', origin);
     return res.status(403).json({
       success: false,
       message: 'Origin not allowed'
@@ -108,40 +112,39 @@ const validateOrigin = (req, res, next) => {
   next();
 };
 
-// Anti-phishing protection
+// Anti-phishing protection - Less aggressive
 const antiPhishingProtection = (req, res, next) => {
-  // Block requests with suspicious patterns
-  const suspiciousPatterns = [
-    /password/i,
-    /credit.?card/i,
-    /ssn/i,
-    /social.?security/i,
-    /bank.?account/i,
-    /routing.?number/i,
-    /account.?number/i,
-    /pin/i,
-    /cvv/i,
-    /expiry/i
-  ];
-  
-  const url = req.url.toLowerCase();
-  const body = JSON.stringify(req.body || {}).toLowerCase();
-  
-  const hasSuspiciousContent = suspiciousPatterns.some(pattern => 
-    pattern.test(url) || pattern.test(body)
-  );
-  
-  if (hasSuspiciousContent && !req.path.startsWith('/api/auth/')) {
-    console.warn('Potential phishing attempt detected:', {
-      url: req.url,
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
-    });
+  // Only check for obvious phishing patterns in form submissions
+  if (req.method === 'POST' && req.path.includes('/auth/')) {
+    const body = JSON.stringify(req.body || {}).toLowerCase();
+    const suspiciousPatterns = [
+      /credit.?card/i,
+      /ssn/i,
+      /social.?security/i,
+      /bank.?account/i,
+      /routing.?number/i,
+      /account.?number/i,
+      /pin/i,
+      /cvv/i,
+      /expiry/i
+    ];
     
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied - suspicious request pattern detected'
-    });
+    const hasSuspiciousContent = suspiciousPatterns.some(pattern => 
+      pattern.test(body)
+    );
+    
+    if (hasSuspiciousContent) {
+      console.warn('Potential phishing attempt detected:', {
+        url: req.url,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+      
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied - suspicious request pattern detected'
+      });
+    }
   }
   
   next();

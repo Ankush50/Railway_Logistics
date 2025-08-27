@@ -29,7 +29,7 @@ app.use(validateOrigin);
 app.use(antiPhishingProtection);
 app.use(blockFileUploadAttacks);
 
-// Security middleware - Configure Helmet with strict settings
+// Security middleware - Configure Helmet with balanced security
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -63,10 +63,10 @@ app.use(helmet({
   xssFilter: true
 }));
 
-// Rate limiting - More strict for security
+// Rate limiting - Balanced for security and usability
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // limit each IP to 50 requests per windowMs (reduced from 100)
+  max: 100, // Increased from 50 for better usability
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -76,7 +76,7 @@ const strictLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit auth attempts to 5 per 15 minutes
+  max: 10, // Increased from 5 for better usability
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -88,7 +88,7 @@ const authLimiter = rateLimit({
 app.use('/api/', strictLimiter);
 app.use('/api/auth', authLimiter);
 
-// CORS configuration - More restrictive
+// CORS configuration - Balanced for security and functionality
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'https://turbotransit1.netlify.app',
   credentials: true,
@@ -97,16 +97,16 @@ app.use(cors({
   maxAge: 86400 // 24 hours
 }));
 
-// Body parsing with strict limits
+// Body parsing with balanced limits
 app.use(express.json({ 
-  limit: '1mb', // Reduced from 10MB for security
+  limit: '5mb', // Increased from 1MB for better usability
   strict: true,
   type: 'application/json'
 }));
 app.use(express.urlencoded({ 
   extended: true, 
-  limit: '1mb',
-  parameterLimit: 10 // Limit number of parameters
+  limit: '5mb',
+  parameterLimit: 20 // Increased from 10
 }));
 
 // Static file serving with security
