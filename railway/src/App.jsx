@@ -25,7 +25,7 @@ import {
   Moon,
   Home,
   Settings,
-  CreditCard,
+  IndianRupee,
   Phone,
   Mail,
   MapPin as LocationIcon,
@@ -724,7 +724,7 @@ function App() {
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg gap-4">
-                <CreditCard className="h-5 w-5 mr-3 text-blue-500" />
+                <IndianRupee className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
                   <p className={`font-bold text-lg ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
@@ -1355,7 +1355,7 @@ function App() {
                           </div>
                         </div>
                         <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <CreditCard className="h-5 w-5 mr-3 text-green-500" />
+                          <IndianRupee className="h-5 w-5 mr-3 text-green-500" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
                             <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
