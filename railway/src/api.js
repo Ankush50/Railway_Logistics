@@ -1,18 +1,6 @@
 import axios from 'axios';
 
-// Prefer configured API URL. Fallback to same-origin or localhost for dev.
-const getDefaultApiUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined') {
-    const { protocol, hostname } = window.location;
-    if (hostname && hostname !== 'localhost') {
-      return `${protocol}//${hostname}/api`;
-    }
-  }
-  return 'http://localhost:5000/api';
-};
-
-const API_URL = getDefaultApiUrl();
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Set auth token
 const setAuthToken = (token) => {
@@ -23,17 +11,28 @@ const setAuthToken = (token) => {
   }
 };
 
-// Use httpOnly cookie auth; include credentials
-import.meta && (axios.defaults.withCredentials = true);
+// Initialize token from localStorage on first import
+const existingToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+if (existingToken) {
+  setAuthToken(existingToken);
+}
 
 // Auth API
 export const register = async (userData) => {
   const response = await axios.post(`${API_URL}/auth/register`, userData);
+  if (response.data.token) {
+    localStorage.setItem('token', response.data.token);
+    setAuthToken(response.data.token);
+  }
   return response.data;
 };
 
 export const login = async (userData) => {
   const response = await axios.post(`${API_URL}/auth/login`, userData);
+  if (response.data.token) {
+    localStorage.setItem('token', response.data.token);
+    setAuthToken(response.data.token);
+  }
   return response.data;
 };
 
@@ -43,7 +42,8 @@ export const getMe = async () => {
 };
 
 export const logout = () => {
-  return axios.post(`${API_URL}/auth/logout`);
+  localStorage.removeItem('token');
+  setAuthToken(null);
 };
 
 // Services API
@@ -80,17 +80,6 @@ export const createBooking = async (bookingData) => {
 
 export const getUserBookings = async () => {
   const response = await axios.get(`${API_URL}/bookings`);
-  return response.data.data;
-};
-
-// Admin Bookings
-export const getAllBookings = async () => {
-  const response = await axios.get(`${API_URL}/bookings/all`);
-  return response.data.data;
-};
-
-export const updateBookingStatus = async (id, status) => {
-  const response = await axios.put(`${API_URL}/bookings/${id}/status`, { status });
   return response.data.data;
 };
 

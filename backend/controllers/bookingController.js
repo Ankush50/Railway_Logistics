@@ -50,34 +50,3 @@ exports.getUserBookings = async (req, res, next) => {
     next(err);
   }
 };
-
-// Admin: get all bookings with user details
-exports.getAllBookings = async (req, res, next) => {
-  try {
-    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email role');
-    res.status(200).json({ success: true, data: bookings });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Admin: update booking status
-exports.updateBookingStatus = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined'];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
-    }
-    const booking = await Booking.findById(id);
-    if (!booking) {
-      return res.status(404).json({ success: false, message: 'Booking not found' });
-    }
-    booking.status = status;
-    await booking.save();
-    res.status(200).json({ success: true, data: booking });
-  } catch (err) {
-    next(err);
-  }
-};

@@ -63,19 +63,3 @@ exports.getMe = async (req, res, next) => {
     next(err);
   }
 };
-
-// Logout user - clear auth cookie if present (safe even if not using cookies)
-exports.logout = async (req, res) => {
-  const isProd = process.env.NODE_ENV === 'production';
-  try {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      path: '/',
-    });
-  } catch (_) {
-    // ignore
-  }
-  return res.status(200).json({ success: true });
-};
