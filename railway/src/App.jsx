@@ -75,6 +75,305 @@ const ThemeProvider = ({ children }) => {
 
 const useTheme = () => useContext(ThemeContext);
 
+// Profile Modal Component - Moved outside App component to fix focus issues
+const ProfileModal = ({
+  showProfileModal,
+  setShowProfileModal,
+  isEditingProfile,
+  setIsEditingProfile,
+  currentUser,
+  startProfileEdit,
+  cancelProfileEdit,
+  handleLogout,
+  profileName,
+  setProfileName,
+  profileEmail,
+  setProfileEmail,
+  profilePhone,
+  setProfilePhone,
+  profileAddress,
+  setProfileAddress,
+  profileCurrentPassword,
+  setProfileCurrentPassword,
+  profileNewPassword,
+  setProfileNewPassword,
+  profileConfirmPassword,
+  setProfileConfirmPassword,
+  profileLoading,
+  profileError,
+  profileSuccess,
+  handleProfileUpdate,
+}) => {
+  if (!showProfileModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Details</h2>
+            <button
+              onClick={() => {
+                setShowProfileModal(false);
+                // Reset form when modal is closed
+                if (isEditingProfile) {
+                  setIsEditingProfile(false);
+                  setProfileName("");
+                  setProfileEmail("");
+                  setProfilePhone("");
+                  setProfileAddress("");
+                  setProfileCurrentPassword("");
+                  setProfileNewPassword("");
+                  setProfileConfirmPassword("");
+                  setProfileError("");
+                  setProfileSuccess("");
+                }
+              }}
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {!isEditingProfile ? (
+            // View Mode
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                    <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
+                    <p className="font-medium text-gray-900 dark:text-white capitalize">{currentUser.role}</p>
+                  </div>
+                </div>
+
+                {currentUser.phone && (
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {currentUser.address && (
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <LocationIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
+                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.address}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 flex items-center justify-between">
+                <button
+                  onClick={startProfileEdit}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg transition-all duration-200 hover:scale-105"
+                  title="Edit Profile"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span className="text-sm font-medium">Edit</span>
+                </button>
+                
+                <button
+                  onClick={() => { setShowProfileModal(false); handleLogout(); }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-all duration-200 hover:scale-105"
+                  title="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Edit Mode
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Update your information</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error and Success Messages */}
+              {profileError && (
+                <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                  {profileError}
+                </div>
+              )}
+
+              {profileSuccess && (
+                <div className="bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
+                  {profileSuccess}
+                </div>
+              )}
+
+              {/* Edit Form */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Company Address
+                  </label>
+                  <textarea
+                    value={profileAddress}
+                    onChange={(e) => setProfileAddress(e.target.value)}
+                    rows={3}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your company address"
+                  />
+                </div>
+
+                {/* Password Change Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Password (Optional)</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        value={profileCurrentPassword}
+                        onChange={(e) => setProfileCurrentPassword(e.target.value)}
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Enter current password"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={profileNewPassword}
+                        onChange={(e) => setProfileNewPassword(e.target.value)}
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Enter new password"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Must be at least 8 characters with uppercase, lowercase, number, and special character
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={profileConfirmPassword}
+                        onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 space-y-3">
+                <button
+                  onClick={handleProfileUpdate}
+                  disabled={profileLoading}
+                  className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                >
+                  {profileLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      Update Profile
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={cancelProfileEdit}
+                  className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [currentView, setCurrentView] = useState("search");
   const [railwayData, setRailwayData] = useState([]);
@@ -1394,278 +1693,6 @@ function App() {
     );
   };
 
-  // Profile Modal Component
-  const ProfileModal = () => {
-    if (!showProfileModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Details</h2>
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  // Reset form when modal is closed
-                  if (isEditingProfile) {
-                    setIsEditingProfile(false);
-                    setProfileName("");
-                    setProfileEmail("");
-                    setProfilePhone("");
-                    setProfileAddress("");
-                    setProfileCurrentPassword("");
-                    setProfileNewPassword("");
-                    setProfileConfirmPassword("");
-                    setProfileError("");
-                    setProfileSuccess("");
-                  }
-                }}
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {!isEditingProfile ? (
-              // View Mode
-              <div className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
-                      <p className="font-medium text-gray-900 dark:text-white capitalize">{currentUser.role}</p>
-                    </div>
-                  </div>
-
-                  {currentUser.phone && (
-                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                        <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.phone}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {currentUser.address && (
-                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <LocationIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
-                        <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.address}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4 flex items-center justify-between">
-                  <button
-                    onClick={startProfileEdit}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg transition-all duration-200 hover:scale-105"
-                    title="Edit Profile"
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span className="text-sm font-medium">Edit</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { setShowProfileModal(false); handleLogout(); }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-all duration-200 hover:scale-105"
-                    title="Logout"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="text-sm font-medium">Logout</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // Edit Mode
-              <div className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Update your information</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Error and Success Messages */}
-                {profileError && (
-                  <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
-                    {profileError}
-                  </div>
-                )}
-
-                {profileSuccess && (
-                  <div className="bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
-                    {profileSuccess}
-                  </div>
-                )}
-
-                {/* Edit Form */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={profileName}
-                      onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={profileEmail}
-                      onChange={(e) => setProfileEmail(e.target.value)}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      value={profilePhone}
-                      onChange={(e) => setProfilePhone(e.target.value)}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Company Address
-                    </label>
-                    <textarea
-                      value={profileAddress}
-                      onChange={(e) => setProfileAddress(e.target.value)}
-                      rows={3}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Enter your company address"
-                    />
-                  </div>
-
-                  {/* Password Change Section */}
-                  <div className="border-t pt-4">
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Password (Optional)</h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                          Current Password
-                        </label>
-                        <input
-                          type="password"
-                          value={profileCurrentPassword}
-                          onChange={(e) => setProfileCurrentPassword(e.target.value)}
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                          placeholder="Enter current password"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                          New Password
-                        </label>
-                        <input
-                          type="password"
-                          value={profileNewPassword}
-                          onChange={(e) => setProfileNewPassword(e.target.value)}
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                          placeholder="Enter new password"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Must be at least 8 characters with uppercase, lowercase, number, and special character
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                          Confirm New Password
-                        </label>
-                        <input
-                          type="password"
-                          value={profileConfirmPassword}
-                          onChange={(e) => setProfileConfirmPassword(e.target.value)}
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                          placeholder="Confirm new password"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-4 space-y-3">
-                  <button
-                    onClick={handleProfileUpdate}
-                    disabled={profileLoading}
-                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
-                  >
-                    {profileLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-5 w-5 mr-2" />
-                        Update Profile
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={cancelProfileEdit}
-                    className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   // Handle booking (open modal)
   const handleBookService = (service) => {
     setSelectedService(service);
@@ -1919,7 +1946,34 @@ function App() {
       </main>
 
       {/* Profile Modal */}
-      <ProfileModal />
+      <ProfileModal
+        showProfileModal={showProfileModal}
+        setShowProfileModal={setShowProfileModal}
+        isEditingProfile={isEditingProfile}
+        setIsEditingProfile={setIsEditingProfile}
+        currentUser={currentUser}
+        startProfileEdit={startProfileEdit}
+        cancelProfileEdit={cancelProfileEdit}
+        handleLogout={handleLogout}
+        profileName={profileName}
+        setProfileName={setProfileName}
+        profileEmail={profileEmail}
+        setProfileEmail={setProfileEmail}
+        profilePhone={profilePhone}
+        setProfilePhone={setProfilePhone}
+        profileAddress={profileAddress}
+        setProfileAddress={setProfileAddress}
+        profileCurrentPassword={profileCurrentPassword}
+        setProfileCurrentPassword={setProfileCurrentPassword}
+        profileNewPassword={profileNewPassword}
+        setProfileNewPassword={setProfileNewPassword}
+        profileConfirmPassword={profileConfirmPassword}
+        setProfileConfirmPassword={setProfileConfirmPassword}
+        profileLoading={profileLoading}
+        profileError={profileError}
+        profileSuccess={profileSuccess}
+        handleProfileUpdate={handleProfileUpdate}
+      />
 
       {/* Booking Modal */}
       {bookingModalOpen && selectedService && (
