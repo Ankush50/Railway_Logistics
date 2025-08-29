@@ -56,7 +56,16 @@ const ThemeContext = createContext();
 const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = saved ? saved === 'dark' : prefersDark;
+    try {
+      document.documentElement.classList.toggle('dark', initial);
+      document.documentElement.style.colorScheme = initial ? 'dark' : 'light';
+      if (document.body && !initial && document.body.classList.contains('dark')) {
+        document.body.classList.remove('dark');
+      }
+    } catch (_) {}
+    return initial;
   });
 
   useEffect(() => {
@@ -65,7 +74,10 @@ const ThemeProvider = ({ children }) => {
     // Improve native component theming and compatibility across devices
     try {
       document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-      document.body && document.body.classList.toggle('dark', isDark);
+      // Ensure body never carries a conflicting dark class
+      if (document.body && document.body.classList.contains('dark') && !isDark) {
+        document.body.classList.remove('dark');
+      }
     } catch (_) {}
   }, [isDark]);
 
