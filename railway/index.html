@@ -6,25 +6,6 @@
     <link rel="icon" type="image/svg+xml" href="/favicon2.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Turbo Transit</title>
-    <!-- Theme detection script - runs before React loads -->
-    <script>
-      // Immediately detect and apply theme to prevent flash
-      (function() {
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-        
-        // Apply theme immediately
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        
-        // Store for React to use
-        window.__INITIAL_THEME__ = theme;
-      })();
-    </script>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
