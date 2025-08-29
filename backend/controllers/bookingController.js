@@ -54,7 +54,7 @@ exports.getUserBookings = async (req, res, next) => {
 // Admin: get all bookings with user details
 exports.getAllBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email role');
+    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email phone role');
     res.status(200).json({ success: true, data: bookings });
   } catch (err) {
     next(err);

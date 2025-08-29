@@ -62,6 +62,11 @@ const ThemeProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.documentElement.classList.toggle('dark', isDark);
+    // Improve native component theming and compatibility across devices
+    try {
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      document.body && document.body.classList.toggle('dark', isDark);
+    } catch (_) {}
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
@@ -1659,8 +1664,8 @@ function App() {
                           <p className={`font-medium break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.email || '—'}</p>
                         </div>
                         <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
-                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Role</p>
-                          <p className={`font-medium capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.role || '—'}</p>
+                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Mobile</p>
+                          <p className={`font-medium break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.phone || '—'}</p>
                         </div>
                       </div>
                     </div>
@@ -1702,7 +1707,7 @@ function App() {
             </h1>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1905,7 +1910,7 @@ function App() {
         <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
           {/* Menu button (enabled on desktop as well) */}
           <button
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setSidebarOpen(prev => !prev)}
             className="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <Menu className="h-6 w-6" />
