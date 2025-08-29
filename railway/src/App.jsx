@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import { SecurityProvider, useSecurity } from "./contexts/SecurityContext";
+import { SecurityProvider, useSecurity } from "./contexts/SecurityContext.jsx";
 import {
   Search,
   Upload,
@@ -105,7 +105,10 @@ function App() {
     clearSecurityAlerts,
     isAccountLocked,
     checkSecurityHealth,
-    SECURITY_CONFIG 
+    SECURITY_CONFIG,
+    twoFactorEnabled,
+    enableTwoFactor,
+    disableTwoFactor
   } = useSecurity();
 
   // UI states
@@ -137,7 +140,6 @@ function App() {
   // Security state
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
   const [securityLog, setSecurityLog] = useState([]);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
@@ -1816,7 +1818,6 @@ function App() {
   const handleEnableTwoFactor = async () => {
     try {
       const response = await enableTwoFactor();
-      setTwoFactorEnabled(true);
       setProfileSuccess("Two-factor authentication enabled successfully!");
       setTimeout(() => setProfileSuccess(""), 3000);
     } catch (error) {
@@ -1832,7 +1833,6 @@ function App() {
 
     try {
       await disableTwoFactor({ password: profileForm.currentPassword });
-      setTwoFactorEnabled(false);
       setProfileSuccess("Two-factor authentication disabled successfully!");
       setTimeout(() => setProfileSuccess(""), 3000);
     } catch (error) {

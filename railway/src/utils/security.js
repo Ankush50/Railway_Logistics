@@ -190,19 +190,6 @@ export class SecurityLogger {
 // Export a default instance
 export const securityLogger = new SecurityLogger();
 
-// Security middleware for React components
-export const withSecurity = (Component) => {
-  return (props) => {
-    // Log component access
-    securityLogger.log('component_access', {
-      component: Component.name || 'Unknown',
-      props: Object.keys(props)
-    });
-
-    return <Component {...props} />;
-  };
-};
-
 // Input validation middleware
 export const validateInput = (input, rules) => {
   const errors = [];
