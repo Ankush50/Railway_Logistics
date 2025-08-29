@@ -1,46 +1,12 @@
 import axios from 'axios';
 
-// Security configuration
+// Basic security configuration
 const SECURITY_CONFIG = {
-  MAX_RETRIES: 3,
-  RETRY_DELAY: 1000,
-  REQUEST_TIMEOUT: 30000, // Increased timeout for login requests
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_FILE_TYPES: ['xlsx', 'xls', 'csv'],
-  RATE_LIMIT_WINDOW: 60000, // 1 minute
-  MAX_REQUESTS_PER_WINDOW: 100
+  ALLOWED_FILE_TYPES: ['xlsx', 'xls', 'csv']
 };
 
-// Rate limiting implementation
-class RateLimiter {
-  constructor() {
-    this.requests = new Map();
-  }
-
-  isAllowed(endpoint) {
-    const now = Date.now();
-    const windowStart = now - SECURITY_CONFIG.RATE_LIMIT_WINDOW;
-    
-    if (!this.requests.has(endpoint)) {
-      this.requests.set(endpoint, []);
-    }
-    
-    const requests = this.requests.get(endpoint);
-    const validRequests = requests.filter(time => time > windowStart);
-    
-    if (validRequests.length >= SECURITY_CONFIG.MAX_REQUESTS_PER_WINDOW) {
-      return false;
-    }
-    
-    validRequests.push(now);
-    this.requests.set(endpoint, validRequests);
-    return true;
-  }
-}
-
-const rateLimiter = new RateLimiter();
-
-// Input sanitization function
+// Simple input sanitization function
 const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input;
   
@@ -52,43 +18,38 @@ const sanitizeInput = (input) => {
     .trim();
 };
 
-// Deep sanitization for objects
-const deepSanitize = (obj) => {
+// Basic sanitization for objects
+const sanitizeObject = (obj) => {
   if (typeof obj !== 'object' || obj === null) return obj;
   
   if (Array.isArray(obj)) {
-    return obj.map(item => deepSanitize(item));
+    return obj.map(item => sanitizeObject(item));
   }
   
   const sanitized = {};
   for (const [key, value] of Object.entries(obj)) {
-    sanitized[key] = deepSanitize(value);
+    if (typeof value === 'string') {
+      sanitized[key] = sanitizeInput(value);
+    } else {
+      sanitized[key] = sanitizeObject(value);
+    }
   }
   return sanitized;
 };
 
-// Security interceptor for axios
+// Simple request interceptor
 axios.interceptors.request.use(
   (config) => {
-    // Check rate limiting
-    const endpoint = `${config.method?.toUpperCase() || 'GET'} ${config.url}`;
-    if (!rateLimiter.isAllowed(endpoint)) {
-      throw new Error('Rate limit exceeded. Please try again later.');
-    }
-
-    // Add security headers (removed Strict-Transport-Security to fix CORS)
+    // Add basic security headers
     config.headers = {
       ...config.headers,
       'X-Requested-With': 'XMLHttpRequest',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
+      'X-Content-Type-Options': 'nosniff'
     };
 
-    // Sanitize request data
+    // Basic sanitization for string inputs only
     if (config.data && typeof config.data === 'object') {
-      config.data = deepSanitize(config.data);
+      config.data = sanitizeObject(config.data);
     }
 
     // Validate file uploads
@@ -110,31 +71,16 @@ axios.interceptors.request.use(
   }
 );
 
-// Response interceptor for security
+// Simple response interceptor
 axios.interceptors.response.use(
   (response) => {
-    // Validate response headers
-    const contentType = response.headers['content-type'];
-    if (contentType && contentType.includes('text/html') && response.config.url.includes('/api/')) {
-      throw new Error('Invalid response format detected');
-    }
-    
     return response;
   },
   (error) => {
-    // Handle security-related errors
-    if (error.response?.status === 429) {
-      throw new Error('Too many requests. Please try again later.');
-    }
-    
-    if (error.response?.status === 403) {
-      throw new Error('Access denied. You do not have permission to perform this action.');
-    }
-    
+    // Handle basic errors
     if (error.response?.status === 401) {
       // Clear invalid token
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem("token");
       throw new Error('Authentication required. Please log in again.');
     }
     
@@ -157,7 +103,7 @@ const getDefaultApiUrl = () => {
 const API_URL = getDefaultApiUrl();
 
 // Set default timeout for all requests
-axios.defaults.timeout = SECURITY_CONFIG.REQUEST_TIMEOUT;
+axios.defaults.timeout = 30000; // Reduced timeout for basic requests
 
 // Set auth token
 export const setAuthToken = (token) => {
@@ -183,52 +129,17 @@ try {
   // ignore storage access errors
 }
 
-// Retry function with exponential backoff
-const retryRequest = async (requestFn, maxRetries = 3) => {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await requestFn();
-    } catch (error) {
-      if (attempt === maxRetries || error.response?.status >= 400) {
-        throw error;
-      }
-      
-      // Wait before retrying (exponential backoff)
-      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-};
 
-// Connection health check
-export const checkConnection = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/health`, { 
-      timeout: 5000,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    });
-    return response.status === 200;
-  } catch (error) {
-    console.warn('Backend connection check failed:', error.message);
-    return false;
-  }
-};
 
-// Auth API with retry logic and connection check
+// Auth API
 export const register = async (userData) => {
-  return retryRequest(() => axios.post(`${API_URL}/auth/register`, userData))
-    .then(response => response.data);
+  const response = await axios.post(`${API_URL}/auth/register`, userData);
+  return response.data;
 };
 
 export const login = async (userData) => {
-  // First check connection health
-  const isHealthy = await checkConnection();
-  if (!isHealthy) {
-    throw new Error('Backend server is not responding. Please try again later.');
-  }
-  
-  return retryRequest(() => axios.post(`${API_URL}/auth/login`, userData))
-    .then(response => response.data);
+  const response = await axios.post(`${API_URL}/auth/login`, userData);
+  return response.data;
 };
 
 export const getMe = async () => {

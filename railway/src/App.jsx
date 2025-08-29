@@ -1,5 +1,4 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import { SecurityProvider, useSecurity } from "./contexts/SecurityContext.jsx";
 import {
   Search,
   Upload,
@@ -53,7 +52,6 @@ import {
   getSecurityLog,
   enableTwoFactor,
   disableTwoFactor,
-  checkConnection,
 } from "./api";
 
 // Theme Context
@@ -99,19 +97,6 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
 
-  // Security context
-  const { 
-    securityAlerts, 
-    acknowledgeAlert, 
-    clearSecurityAlerts,
-    isAccountLocked,
-    checkSecurityHealth,
-    SECURITY_CONFIG,
-    twoFactorEnabled,
-    enableTwoFactor,
-    disableTwoFactor
-  } = useSecurity();
-
   // UI states
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -138,12 +123,13 @@ function App() {
   const [profileError, setProfileError] = useState("");
   const [profileSuccess, setProfileSuccess] = useState("");
 
-  // Security state
+  // Basic security state (backend only)
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
   const [securityLog, setSecurityLog] = useState([]);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   // Check for existing token on app load
   useEffect(() => {
@@ -215,41 +201,9 @@ function App() {
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [loginStep, setLoginStep] = useState(""); // Track login progress
-    const [connectionStatus, setConnectionStatus] = useState("checking"); // Connection status
 
-    // Security context for login
-    const { 
-      recordFailedLogin, 
-      recordSuccessfulLogin, 
-      isAccountLocked,
-      failedLoginAttempts,
-      lastFailedLogin 
-    } = useSecurity();
-
-    // Check connection status on component mount
-    useEffect(() => {
-      const checkServerStatus = async () => {
-        try {
-          setConnectionStatus("checking");
-          const isConnected = await checkConnection();
-          setConnectionStatus(isConnected ? "connected" : "disconnected");
-        } catch (error) {
-          setConnectionStatus("disconnected");
-        }
-      };
-      
-      checkServerStatus();
-    }, []);
 
     const handleLogin = async () => {
-      // Check if account is locked
-      if (isAccountLocked) {
-        const remainingTime = Math.ceil((SECURITY_CONFIG.LOCKOUT_DURATION - (Date.now() - lastFailedLogin.getTime())) / 1000 / 60);
-        setLoginError(`Account is temporarily locked. Please try again in ${remainingTime} minutes.`);
-        return;
-      }
-
       if (!loginForm.username || !loginForm.password) {
         setLoginError("Please fill in all fields");
         return;
@@ -258,33 +212,20 @@ function App() {
       try {
         setLoginLoading(true);
         setLoginError("");
-        setLoginStep("Checking server connection...");
         
-        // Check connection first
-        const isConnected = await checkConnection();
-        if (!isConnected) {
-          setLoginStep("Server connection failed");
-          throw new Error("Cannot connect to server. Please check your internet connection.");
-        }
-        
-        setLoginStep("Authenticating credentials...");
         const response = await login(loginForm);
         
-        setLoginStep("Setting up session...");
         // Login successful
         if (response.token) {
           localStorage.setItem("token", response.token);
           setAuthToken(response.token);
-          recordSuccessfulLogin(); // Record successful login
         }
         
-        setLoginStep("Loading user data...");
         setCurrentUser(response.user);
         setIsAuthenticated(true);
         setCurrentView("search");
       } catch (error) {
         console.error("Login failed:", error);
-        recordFailedLogin(); // Record failed login attempt
         
         let errorMessage = "Login failed. Please try again.";
         
@@ -297,20 +238,11 @@ function App() {
           errorMessage = "CORS error. Please check if the backend is accessible.";
         } else if (error.response?.data?.message) {
           errorMessage = error.response.data.message;
-        } else if (error.message.includes("Cannot connect to server")) {
-          errorMessage = error.message;
         }
         
         setLoginError(errorMessage);
-        
-        // Show remaining attempts
-        if (failedLoginAttempts > 0) {
-          const remainingAttempts = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - failedLoginAttempts;
-          setLoginError(`${errorMessage} (${remainingAttempts} attempts remaining)`);
-        }
       } finally {
         setLoginLoading(false);
-        setLoginStep("");
       }
     };
 
@@ -325,47 +257,7 @@ function App() {
             <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
 
-          {/* Connection Status */}
-          <div className={`mb-4 p-3 rounded-lg ${
-            connectionStatus === "connected" ? "bg-green-50 border border-green-200" :
-            connectionStatus === "disconnected" ? "bg-red-50 border border-red-200" :
-            "bg-gray-50 border border-gray-200"
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${
-                  connectionStatus === "connected" ? "bg-green-500" :
-                  connectionStatus === "disconnected" ? "bg-red-500" :
-                  "bg-gray-400 animate-pulse"
-                }`}></div>
-                <span className={
-                  connectionStatus === "connected" ? "text-green-700" :
-                  connectionStatus === "disconnected" ? "text-red-700" :
-                  "text-gray-600"
-                }>
-                  {connectionStatus === "connected" ? "Server connected" :
-                   connectionStatus === "disconnected" ? "Server disconnected" :
-                   "Checking server status..."}
-                </span>
-              </div>
-              {connectionStatus === "disconnected" && (
-                <button
-                  onClick={async () => {
-                    setConnectionStatus("checking");
-                    try {
-                      const isConnected = await checkConnection();
-                      setConnectionStatus(isConnected ? "connected" : "disconnected");
-                    } catch (error) {
-                      setConnectionStatus("disconnected");
-                    }
-                  }}
-                  className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                >
-                  Retry
-                </button>
-              )}
-            </div>
-          </div>
+
 
           {loginError && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -1499,7 +1391,7 @@ function App() {
                 </div>
 
                 <div className="pt-4 space-y-3">
-                  <button
+                                    <button
                     onClick={startProfileEdit}
                     className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
                   >
@@ -1882,7 +1774,7 @@ function App() {
     setProfileSuccess("");
   };
 
-  // Security functions
+  // Basic security functions (backend only)
   const handleDeleteAccount = async () => {
     if (!deleteAccountPassword) {
       setProfileError("Password is required to delete account");
@@ -1904,7 +1796,7 @@ function App() {
 
   const handleEnableTwoFactor = async () => {
     try {
-      const response = await enableTwoFactor();
+      await enableTwoFactor();
       setProfileSuccess("Two-factor authentication enabled successfully!");
       setTimeout(() => setProfileSuccess(""), 3000);
     } catch (error) {
@@ -1992,16 +1884,6 @@ function App() {
 
           {/* Right side controls */}
           <div className="flex items-center space-x-4">
-            {/* Security Status Indicator */}
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
-                checkSecurityHealth().healthy ? 'bg-green-500' : 'bg-red-500'
-              }`} title={checkSecurityHealth().healthy ? 'Security OK' : 'Security Issues Detected'} />
-              <span className="hidden lg:block text-xs text-gray-500 dark:text-gray-400">
-                {checkSecurityHealth().score}/100
-              </span>
-            </div>
-
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -2055,63 +1937,7 @@ function App() {
         </div>
       )}
 
-      {/* Security Alerts Display */}
-      {securityAlerts.length > 0 && (
-        <div className={`${sidebarOpen ? 'lg:ml-64' : ''} px-4 sm:px-6 lg:px-8 mt-4`}>
-          <div className="border rounded-xl px-6 py-4 shadow-lg bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-700">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">Security Alerts</h3>
-              <button
-                onClick={clearSecurityAlerts}
-                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
-              >
-                Clear All
-              </button>
-            </div>
-            <div className="space-y-2">
-              {securityAlerts.slice(0, 3).map((alert) => (
-                <div key={alert.id} className={`p-3 rounded-lg ${
-                  alert.level === 'critical' ? 'bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
-                  alert.level === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' :
-                  'bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium ${
-                        alert.level === 'critical' ? 'text-red-800 dark:text-red-200' :
-                        alert.level === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
-                        'text-blue-800 dark:text-blue-200'
-                      }`}>
-                        {alert.message}
-                      </p>
-                      <p className={`text-xs ${
-                        alert.level === 'critical' ? 'text-red-600 dark:text-red-400' :
-                        alert.level === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
-                        'text-blue-600 dark:text-blue-400'
-                      }`}>
-                        {new Date(alert.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                    {!alert.acknowledged && (
-                      <button
-                        onClick={() => acknowledgeAlert(alert.id)}
-                        className="ml-3 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                      >
-                        Acknowledge
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {securityAlerts.length > 3 && (
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 text-center">
-                  +{securityAlerts.length - 3} more alerts
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Main Content */}
       <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-6 transition-all duration-300`}>
