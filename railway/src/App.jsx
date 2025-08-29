@@ -101,7 +101,9 @@ const ProfileModal = ({
   setProfileConfirmPassword,
   profileLoading,
   profileError,
+  setProfileError,
   profileSuccess,
+  setProfileSuccess,
   handleProfileUpdate,
 }) => {
   if (!showProfileModal) return null;
@@ -1971,7 +1973,9 @@ function App() {
         setProfileConfirmPassword={setProfileConfirmPassword}
         profileLoading={profileLoading}
         profileError={profileError}
+        setProfileError={setProfileError}
         profileSuccess={profileSuccess}
+        setProfileSuccess={setProfileSuccess}
         handleProfileUpdate={handleProfileUpdate}
       />
 
