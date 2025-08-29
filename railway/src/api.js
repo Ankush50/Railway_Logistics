@@ -58,6 +58,17 @@ export const logout = () => {
   return axios.post(`${API_URL}/auth/logout`);
 };
 
+// Profile Update API
+export const updateProfile = async (profileData) => {
+  const response = await axios.put(`${API_URL}/auth/profile`, profileData);
+  return response.data;
+};
+
+export const changePassword = async (passwordData) => {
+  const response = await axios.put(`${API_URL}/auth/password`, passwordData);
+  return response.data;
+};
+
 // Services API
 export const getServices = async () => {
   const response = await axios.get(`${API_URL}/services`);
