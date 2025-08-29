@@ -53,12 +53,17 @@ const ThemeContext = createContext();
 
 const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
+    // Use the theme that was set by the HTML script
+    if (typeof window !== 'undefined' && window.__INITIAL_THEME__) {
+      return window.__INITIAL_THEME__ === 'dark';
+    }
     const saved = localStorage.getItem('theme');
     return saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    // Sync with Tailwind's dark mode
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
@@ -543,12 +548,8 @@ function App() {
 
     return (
       <div className="max-w-4xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-8 mb-8 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}>
-          <h2 className={`text-3xl font-bold mb-8 flex items-center ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
+        <div className="rounded-2xl shadow-xl p-8 mb-8 transition-colors duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-3xl font-bold mb-8 flex items-center text-gray-800 dark:text-white">
             <div className="bg-blue-100 dark:bg-blue-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
               <Search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
@@ -557,9 +558,7 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-200">
                 From
               </label>
               <div className="relative">
@@ -567,11 +566,7 @@ function App() {
                 <input
                   type="text"
                   placeholder="Origin city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={searchForm.from}
                   onChange={(e) =>
                     setSearchForm({ ...searchForm, from: e.target.value })
@@ -581,9 +576,7 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-200">
                 To
               </label>
               <div className="relative">
@@ -591,11 +584,7 @@ function App() {
                 <input
                   type="text"
                   placeholder="Destination city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={searchForm.to}
                   onChange={(e) =>
                     setSearchForm({ ...searchForm, to: e.target.value })
@@ -605,20 +594,14 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-200">
                 Date
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="date"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={searchForm.date}
                   onChange={(e) =>
                     setSearchForm({ ...searchForm, date: e.target.value })
@@ -628,9 +611,7 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
+              <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-200">
                 Weight (tons)
               </label>
               <div className="relative">
@@ -638,11 +619,7 @@ function App() {
                 <input
                   type="number"
                   placeholder="Weight needed"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={searchForm.weight}
                   onChange={(e) =>
                     setSearchForm({ ...searchForm, weight: e.target.value })
@@ -675,12 +652,8 @@ function App() {
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
-            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}>
-            <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-              isDark ? 'text-white' : 'text-gray-800'
-            }`}>
+          <div className="rounded-2xl shadow-xl p-8 transition-colors duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-2xl font-bold mb-6 flex items-center text-gray-800 dark:text-white">
               <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
                 <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
@@ -704,16 +677,10 @@ function App() {
   // Service Card Component
   const ServiceCard = ({ service, onBook }) => {
     return (
-      <div className={`border rounded-xl p-6 hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 ${
-        isDark 
-          ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
-          : 'bg-white border-gray-200 hover:bg-gray-50'
-      }`}>
+      <div className="border rounded-xl p-6 hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
-            <h4 className={`text-xl font-bold mb-3 ${
-              isDark ? 'text-white' : 'text-gray-800'
-            }`}>
+            <h4 className="text-xl font-bold mb-3 text-gray-800 dark:text-white">
               {service.route}
             </h4>
             <div className="space-y-3">
@@ -721,7 +688,7 @@ function App() {
                 <Clock className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Schedule</p>
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {service.departure} - {service.arrival}
                   </p>
                 </div>
@@ -730,7 +697,7 @@ function App() {
                 <Package className="h-5 w-5 mr-3 text-green-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Capacity</p>
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <p className="font-medium text-gray-900 dark:text-white">
                     {service.available}/{service.capacity} tons
                   </p>
                 </div>
@@ -739,7 +706,7 @@ function App() {
                 <Tag className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
-                  <p className={`font-bold text-lg ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <p className="font-bold text-lg text-blue-600 dark:text-blue-400">
                     ₹{service.pricePerTon}/ton
                   </p>
                 </div>
@@ -901,22 +868,16 @@ function App() {
 
     return (
       <div className="max-w-6xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}>
+        <div className="rounded-2xl shadow-xl p-8 transition-colors duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h2 className={`text-3xl font-bold flex items-center ${
-                isDark ? 'text-white' : 'text-gray-800'
-              }`}>
+              <h2 className="text-3xl font-bold flex items-center text-gray-800 dark:text-white">
                 <div className="bg-purple-100 dark:bg-purple-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
                   <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 Admin Panel
               </h2>
-              <p className={`${
-                isDark ? 'text-gray-300' : 'text-gray-600'
-              }`}>
+              <p className="text-gray-600 dark:text-gray-300">
                 Manage railway services and system data
               </p>
             </div>
@@ -964,25 +925,15 @@ function App() {
 
           {/* Add Service Form */}
           {showAddForm && (
-            <div className={`mb-8 p-6 border rounded-xl ${
-              isDark 
-                ? 'bg-gray-700 border-gray-600' 
-                : 'bg-gray-50 border-gray-200'
-            }`}>
-              <h3 className={`text-xl font-semibold mb-6 ${
-                isDark ? 'text-white' : 'text-gray-800'
-              }`}>
+            <div className="mb-8 p-6 border rounded-xl bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+              <h3 className="text-xl font-semibold mb-6 text-gray-800 dark:text-white">
                 {editingService ? 'Edit Service' : 'Add New Service'}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <input
                   type="text"
                   placeholder="Route (e.g., Delhi - Mumbai)"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.route}
                   onChange={(e) =>
                     setNewService({ ...newService, route: e.target.value })
@@ -991,11 +942,7 @@ function App() {
                 <input
                   type="time"
                   placeholder="Departure"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.departure}
                   onChange={(e) =>
                     setNewService({ ...newService, departure: e.target.value })
@@ -1004,11 +951,7 @@ function App() {
                 <input
                   type="text"
                   placeholder="Arrival (e.g., 18:00)"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.arrival}
                   onChange={(e) =>
                     setNewService({ ...newService, arrival: e.target.value })
@@ -1017,11 +960,7 @@ function App() {
                 <input
                   type="number"
                   placeholder="Total Capacity (tons)"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.capacity}
                   onChange={(e) =>
                     setNewService({ ...newService, capacity: e.target.value })
@@ -1030,11 +969,7 @@ function App() {
                 <input
                   type="number"
                   placeholder="Available (tons)"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.available}
                   onChange={(e) =>
                     setNewService({ ...newService, available: e.target.value })
@@ -1043,11 +978,7 @@ function App() {
                 <input
                   type="number"
                   placeholder="Price per ton"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.pricePerTon}
                   onChange={(e) =>
                     setNewService({
@@ -1059,11 +990,7 @@ function App() {
                 <input
                   type="tel"
                   placeholder="Contact number"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.contact}
                   onChange={(e) =>
                     setNewService({ ...newService, contact: e.target.value })
@@ -1071,11 +998,7 @@ function App() {
                 />
                 <input
                   type="date"
-                  className={`p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
+                  className="p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   value={newService.date}
                   onChange={(e) =>
                     setNewService({ ...newService, date: e.target.value })
@@ -1103,77 +1026,47 @@ function App() {
           {/* Services List */}
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
-              <thead className={`${
-                isDark ? 'bg-gray-700' : 'bg-gray-50'
-              }`}>
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Route
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Time
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Capacity
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Price/Ton
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Date
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
-                    isDark ? 'text-gray-200' : 'text-gray-700'
-                  }`}>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${
-                isDark ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-gray-200'
-              }`}>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {railwayData.map((service) => (
-                  <tr key={service._id} className={`hover:${
-                    isDark ? 'bg-gray-700' : 'bg-gray-50'
-                  } transition-colors duration-200`}>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                  <tr key={service._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {service.route}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {service.departure} - {service.arrival}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {service.available}/{service.capacity} tons
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       ₹{service.pricePerTon}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {service.date}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       <div className="flex space-x-3">
                         <button 
                           onClick={() => handleEditService(service)}
@@ -1203,12 +1096,8 @@ function App() {
   const BookingInterface = () => {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}>
-          <h2 className={`text-3xl font-bold mb-8 flex items-center ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
+        <div className="rounded-2xl shadow-xl p-8 transition-colors duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-3xl font-bold mb-8 flex items-center text-gray-800 dark:text-white">
             <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
               <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
@@ -1218,14 +1107,14 @@ function App() {
           {loading ? (
             <div className="text-center py-12">
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600 mb-4" />
-              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading bookings...</p>
+              <p className="text-lg text-gray-500 dark:text-gray-300">Loading bookings...</p>
             </div>
           ) : bookings.length === 0 ? (
             <div className="text-center py-12">
               <div className="bg-gray-100 dark:bg-gray-700 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="h-12 w-12 text-gray-400 dark:text-gray-500" />
               </div>
-              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+              <p className="text-lg text-gray-500 dark:text-gray-300">
                 No bookings yet.
               </p>
             </div>
@@ -1234,17 +1123,11 @@ function App() {
               {bookings.map((booking) => (
                 <div
                   key={booking._id}
-                  className={`border rounded-xl p-6 transition-all duration-200 hover:shadow-lg ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
-                      : 'bg-white border-gray-200 hover:bg-gray-50'
-                  }`}
+                  className="border rounded-xl p-6 transition-all duration-200 hover:shadow-lg bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   <div className="flex justify-between items-start">
                     <div className="space-y-3">
-                      <h4 className={`text-xl font-bold ${
-                        isDark ? 'text-white' : 'text-gray-800'
-                      }`}>
+                      <h4 className="text-xl font-bold text-gray-800 dark:text-white">
                         {booking.route || booking.serviceId?.route}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1252,7 +1135,7 @@ function App() {
                           <Package className="h-5 w-5 mr-3 text-blue-500" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
-                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {booking.quantity} tons
                             </p>
                           </div>
@@ -1261,7 +1144,7 @@ function App() {
                           <Tag className="h-5 w-5 mr-3 text-green-500" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                            <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                            <p className="font-bold text-green-600 dark:text-green-400">
                               ₹{booking.total}
                             </p>
                           </div>
@@ -1270,17 +1153,22 @@ function App() {
                           <Calendar className="h-5 w-5 mr-3 text-blue-500" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Booked On</p>
-                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <p className="font-medium text-gray-900 dark:text-white">
                               {new Date(booking.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         {currentUser?.role === 'admin' && (
                           <div className="md:col-span-3 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
-                            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>User</p>
-                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              {booking.userId?.name} ({booking.userId?.username}) — {booking.userId?.email}
-                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">User</p>
+                            <div className="space-y-1">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {booking.userId?.name} ({booking.userId?.username})
+                              </p>
+                              <p className="text-sm break-all text-gray-600 dark:text-gray-300">
+                                {booking.userId?.email}
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1420,7 +1308,7 @@ function App() {
                   <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{currentUser.email}</p>
+                    <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.email}</p>
                   </div>
                 </div>
 
@@ -1437,7 +1325,7 @@ function App() {
                     <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{currentUser.phone}</p>
+                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.phone}</p>
                     </div>
                   </div>
                 )}
@@ -1447,7 +1335,7 @@ function App() {
                     <LocationIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{currentUser.address}</p>
+                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.address}</p>
                     </div>
                   </div>
                 )}
@@ -1541,16 +1429,12 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
-    }`}>
+    <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Top Navigation Bar */}
-      <nav className={`${sidebarOpen ? 'lg:ml-64' : ''} border-b transition-colors duration-300 ${
-        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      } shadow-sm`}>
+      <nav className={`${sidebarOpen ? 'lg:ml-64' : ''} border-b transition-colors duration-300 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm`}>
         <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
           {/* Menu button (enabled on desktop as well) */}
           <button
@@ -1610,18 +1494,12 @@ function App() {
       {/* Error Display */}
       {error && (
         <div className={`${sidebarOpen ? 'lg:ml-64' : ''} px-4 sm:px-6 lg:px-8 mt-4`}>
-          <div className={`border rounded-xl px-6 py-4 shadow-lg ${
-            isDark 
-              ? 'bg-red-900/20 border-red-700 text-red-300' 
-              : 'bg-red-100 border-red-400 text-red-700'
-          }`}>
+          <div className="border rounded-xl px-6 py-4 shadow-lg bg-red-100 dark:bg-red-900/20 border-red-400 dark:border-red-700 text-red-700 dark:text-red-300">
             <div className="flex items-center justify-between">
               <span className="font-medium">{error}</span>
               <button
                 onClick={() => setError("")}
-                className={`p-1 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors ${
-                  isDark ? 'text-red-300 hover:text-red-200' : 'text-red-600 hover:text-red-800'
-                }`}
+                className="p-1 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors text-red-600 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1645,124 +1523,118 @@ function App() {
       {/* Booking Modal */}
       {bookingModalOpen && selectedService && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${
-            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Book Service</h3>
-                <button
-                  onClick={() => setBookingModalOpen(false)}
-                  className={`p-2 rounded-lg ${isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                  <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Book Service</h3>
+              <button
+                onClick={() => setBookingModalOpen(false)}
+                className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-3 mb-4">
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Route</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{selectedService.route}</p>
               </div>
-              <div className="space-y-3 mb-4">
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Route</p>
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedService.route}</p>
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Available</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{selectedService.available} tons</p>
+              </div>
+              <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Price</p>
+                <p className="font-bold text-blue-600 dark:text-blue-400">₹{selectedService.pricePerTon}/ton</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">Quantity (tons)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedService.available}
+                  value={bookingQuantity}
+                  onChange={(e) => setBookingQuantity(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Enter quantity"
+                />
+              </div>
+              {bookingQuantity && parseInt(bookingQuantity) > 0 && (
+                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                  <p className="text-sm text-green-700 dark:text-green-300">Estimated Total</p>
+                  <p className="text-xl font-bold text-green-700 dark:text-green-400">
+                    ₹{(parseInt(bookingQuantity) || 0) * selectedService.pricePerTon}
+                  </p>
                 </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Available</p>
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedService.available} tons</p>
-                </div>
-                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Price</p>
-                  <p className={`font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>₹{selectedService.pricePerTon}/ton</p>
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Quantity (tons)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max={selectedService.available}
-                    value={bookingQuantity}
-                    onChange={(e) => setBookingQuantity(e.target.value)}
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    }`}
-                    placeholder="Enter quantity"
-                  />
-                </div>
-                {bookingQuantity && parseInt(bookingQuantity) > 0 && (
-                  <div className={`p-3 rounded-lg ${isDark ? 'bg-green-900/20' : 'bg-green-50'}`}>
-                    <p className={`text-sm ${isDark ? 'text-green-300' : 'text-green-700'}`}>Estimated Total</p>
-                    <p className={`text-xl font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>
-                      ₹{(parseInt(bookingQuantity) || 0) * selectedService.pricePerTon}
-                    </p>
-                  </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setBookingModalOpen(false)}
+                className="px-5 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitBooking}
+                disabled={bookingSubmitting}
+                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {bookingSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Booking...
+                  </>
+                ) : (
+                  'Confirm Booking'
                 )}
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setBookingModalOpen(false)}
-                  className={`px-5 py-2 rounded-lg font-medium ${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={submitBooking}
-                  disabled={bookingSubmitting}
-                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2 rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  {bookingSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Booking...
-                    </>
-                  ) : (
-                    'Confirm Booking'
-                  )}
-                </button>
-              </div>
+              </button>
             </div>
           </div>
+        </div>
         </div>
       )}
 
       {/* Booking Success Modal */}
       {bookingSuccess && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-          <div className={`w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden text-center ${
-            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}>
-            <div className={`p-8 ${isDark ? 'bg-gradient-to-br from-emerald-900/40 to-blue-900/30' : 'bg-gradient-to-br from-emerald-50 to-blue-50'}`}>
-              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                  <div className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="p-8 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/40 dark:to-blue-900/30">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="text-3xl font-extrabold mb-2 text-gray-900 dark:text-white">Hurray!</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Your booking has been confirmed.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-6">
+              <div className="p-4 rounded-xl bg-white border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+                <p className="text-xs text-gray-500 dark:text-gray-300">Route</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{bookingSuccess.route}</p>
               </div>
-              <h3 className={`text-3xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Hurray!</h3>
-              <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-6`}>Your booking has been confirmed.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-6">
-                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
-                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Route</p>
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{bookingSuccess.route}</p>
-                </div>
-                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
-                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Quantity</p>
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{bookingSuccess.quantity} tons</p>
-                </div>
-                <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white border border-gray-200'}`}>
-                  <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Total</p>
-                  <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>₹{bookingSuccess.total}</p>
-                </div>
+              <div className="p-4 rounded-xl bg-white border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+                <p className="text-xs text-gray-500 dark:text-gray-300">Quantity</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{bookingSuccess.quantity} tons</p>
               </div>
-              <div className="flex flex-col sm:flex-row justify-center gap-3">
-                <button
-                  onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  View My Bookings
-                </button>
-                <button
-                  onClick={() => setBookingSuccess(null)}
-                  className={isDark ? 'bg-gray-700 text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-600' : 'bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200'}
-                >
-                  Close
-                </button>
+              <div className="p-4 rounded-xl bg-white border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+                <p className="text-xs text-gray-500 dark:text-gray-300">Total</p>
+                <p className="font-bold text-green-700 dark:text-green-400">₹{bookingSuccess.total}</p>
               </div>
             </div>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                View My Bookings
+              </button>
+              <button
+                onClick={() => setBookingSuccess(null)}
+                className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
           </div>
+        </div>
         </div>
       )}
     </div>
