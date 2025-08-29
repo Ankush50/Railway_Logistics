@@ -4,7 +4,7 @@ import axios from 'axios';
 const SECURITY_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_DELAY: 1000,
-  REQUEST_TIMEOUT: 10000,
+  REQUEST_TIMEOUT: 30000, // Increased timeout for login requests
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
   ALLOWED_FILE_TYPES: ['xlsx', 'xls', 'csv'],
   RATE_LIMIT_WINDOW: 60000, // 1 minute
@@ -76,15 +76,14 @@ axios.interceptors.request.use(
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
-    // Add security headers
+    // Add security headers (removed Strict-Transport-Security to fix CORS)
     config.headers = {
       ...config.headers,
       'X-Requested-With': 'XMLHttpRequest',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
     };
 
     // Sanitize request data
@@ -157,6 +156,9 @@ const getDefaultApiUrl = () => {
 
 const API_URL = getDefaultApiUrl();
 
+// Set default timeout for all requests
+axios.defaults.timeout = SECURITY_CONFIG.REQUEST_TIMEOUT;
+
 // Set auth token
 export const setAuthToken = (token) => {
   if (token) {
@@ -181,15 +183,52 @@ try {
   // ignore storage access errors
 }
 
-// Auth API
+// Retry function with exponential backoff
+const retryRequest = async (requestFn, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      if (attempt === maxRetries || error.response?.status >= 400) {
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Connection health check
+export const checkConnection = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/health`, { 
+      timeout: 5000,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.warn('Backend connection check failed:', error.message);
+    return false;
+  }
+};
+
+// Auth API with retry logic and connection check
 export const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/auth/register`, userData);
-  return response.data;
+  return retryRequest(() => axios.post(`${API_URL}/auth/register`, userData))
+    .then(response => response.data);
 };
 
 export const login = async (userData) => {
-  const response = await axios.post(`${API_URL}/auth/login`, userData);
-  return response.data;
+  // First check connection health
+  const isHealthy = await checkConnection();
+  if (!isHealthy) {
+    throw new Error('Backend server is not responding. Please try again later.');
+  }
+  
+  return retryRequest(() => axios.post(`${API_URL}/auth/login`, userData))
+    .then(response => response.data);
 };
 
 export const getMe = async () => {

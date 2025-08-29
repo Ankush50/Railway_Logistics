@@ -53,6 +53,7 @@ import {
   getSecurityLog,
   enableTwoFactor,
   disableTwoFactor,
+  checkConnection,
 } from "./api";
 
 // Theme Context
@@ -214,6 +215,8 @@ function App() {
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loginStep, setLoginStep] = useState(""); // Track login progress
+    const [connectionStatus, setConnectionStatus] = useState("checking"); // Connection status
 
     // Security context for login
     const { 
@@ -223,6 +226,21 @@ function App() {
       failedLoginAttempts,
       lastFailedLogin 
     } = useSecurity();
+
+    // Check connection status on component mount
+    useEffect(() => {
+      const checkServerStatus = async () => {
+        try {
+          setConnectionStatus("checking");
+          const isConnected = await checkConnection();
+          setConnectionStatus(isConnected ? "connected" : "disconnected");
+        } catch (error) {
+          setConnectionStatus("disconnected");
+        }
+      };
+      
+      checkServerStatus();
+    }, []);
 
     const handleLogin = async () => {
       // Check if account is locked
@@ -240,8 +258,19 @@ function App() {
       try {
         setLoginLoading(true);
         setLoginError("");
+        setLoginStep("Checking server connection...");
+        
+        // Check connection first
+        const isConnected = await checkConnection();
+        if (!isConnected) {
+          setLoginStep("Server connection failed");
+          throw new Error("Cannot connect to server. Please check your internet connection.");
+        }
+        
+        setLoginStep("Authenticating credentials...");
         const response = await login(loginForm);
         
+        setLoginStep("Setting up session...");
         // Login successful
         if (response.token) {
           localStorage.setItem("token", response.token);
@@ -249,6 +278,7 @@ function App() {
           recordSuccessfulLogin(); // Record successful login
         }
         
+        setLoginStep("Loading user data...");
         setCurrentUser(response.user);
         setIsAuthenticated(true);
         setCurrentView("search");
@@ -256,7 +286,21 @@ function App() {
         console.error("Login failed:", error);
         recordFailedLogin(); // Record failed login attempt
         
-        const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+        let errorMessage = "Login failed. Please try again.";
+        
+        // Handle specific error types
+        if (error.code === 'ERR_NETWORK') {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.code === 'ECONNABORTED') {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (error.response?.status === 0) {
+          errorMessage = "CORS error. Please check if the backend is accessible.";
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message.includes("Cannot connect to server")) {
+          errorMessage = error.message;
+        }
+        
         setLoginError(errorMessage);
         
         // Show remaining attempts
@@ -266,6 +310,7 @@ function App() {
         }
       } finally {
         setLoginLoading(false);
+        setLoginStep("");
       }
     };
 
@@ -278,6 +323,48 @@ function App() {
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
             <p className="text-gray-600 mt-2">Sign in to your account</p>
+          </div>
+
+          {/* Connection Status */}
+          <div className={`mb-4 p-3 rounded-lg ${
+            connectionStatus === "connected" ? "bg-green-50 border border-green-200" :
+            connectionStatus === "disconnected" ? "bg-red-50 border border-red-200" :
+            "bg-gray-50 border border-gray-200"
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${
+                  connectionStatus === "connected" ? "bg-green-500" :
+                  connectionStatus === "disconnected" ? "bg-red-500" :
+                  "bg-gray-400 animate-pulse"
+                }`}></div>
+                <span className={
+                  connectionStatus === "connected" ? "text-green-700" :
+                  connectionStatus === "disconnected" ? "text-red-700" :
+                  "text-gray-600"
+                }>
+                  {connectionStatus === "connected" ? "Server connected" :
+                   connectionStatus === "disconnected" ? "Server disconnected" :
+                   "Checking server status..."}
+                </span>
+              </div>
+              {connectionStatus === "disconnected" && (
+                <button
+                  onClick={async () => {
+                    setConnectionStatus("checking");
+                    try {
+                      const isConnected = await checkConnection();
+                      setConnectionStatus(isConnected ? "connected" : "disconnected");
+                    } catch (error) {
+                      setConnectionStatus("disconnected");
+                    }
+                  }}
+                  className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
           </div>
 
           {loginError && (
@@ -339,7 +426,7 @@ function App() {
               {loginLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
+                  {loginStep || "Connecting to server..."}
                 </>
               ) : (
                 "Sign In"
