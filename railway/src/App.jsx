@@ -1337,7 +1337,6 @@ function App() {
       { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
       { id: "bookings", label: "My Bookings", icon: Eye, color: "text-green-600" },
       ...(currentUser?.role === "admin" ? [{ id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }] : []),
-      { id: "profile", label: "Profile & Settings", icon: User, color: "text-indigo-600" },
     ];
 
     return (
@@ -1465,18 +1464,23 @@ function App() {
                   )}
                 </div>
 
-                <div className="pt-4 space-y-3">
+                <div className="pt-4 flex items-center justify-between">
                   <button
                     onClick={startProfileEdit}
-                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Edit Profile"
                   >
-                    <Edit className="h-5 w-5 mr-2" /> Edit Profile
+                    <Settings className="h-5 w-5" />
+                    <span className="text-sm font-medium">Edit</span>
                   </button>
+                  
                   <button
                     onClick={() => { setShowProfileModal(false); handleLogout(); }}
-                    className="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Logout"
                   >
-                    <LogOut className="h-5 w-5 mr-2" /> Logout
+                    <LogOut className="h-5 w-5" />
+                    <span className="text-sm font-medium">Logout</span>
                   </button>
                 </div>
               </div>
@@ -1516,8 +1520,8 @@ function App() {
                     </label>
                     <input
                       type="text"
-                      value={profileForm.name}
-                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                      value={profileForm.name || ""}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your full name"
                     />
@@ -1529,8 +1533,8 @@ function App() {
                     </label>
                     <input
                       type="email"
-                      value={profileForm.email}
-                      onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                      value={profileForm.email || ""}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your email"
                     />
@@ -1542,8 +1546,8 @@ function App() {
                     </label>
                     <input
                       type="tel"
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      value={profileForm.phone || ""}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your phone number"
                     />
@@ -1554,8 +1558,8 @@ function App() {
                       Company Address
                     </label>
                     <textarea
-                      value={profileForm.address}
-                      onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                      value={profileForm.address || ""}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, address: e.target.value }))}
                       rows={3}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your company address"
@@ -1573,8 +1577,8 @@ function App() {
                         </label>
                         <input
                           type="password"
-                          value={profileForm.currentPassword}
-                          onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                          value={profileForm.currentPassword || ""}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Enter current password"
                         />
@@ -1586,8 +1590,8 @@ function App() {
                         </label>
                         <input
                           type="password"
-                          value={profileForm.newPassword}
-                          onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })}
+                          value={profileForm.newPassword || ""}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Enter new password"
                         />
@@ -1602,8 +1606,8 @@ function App() {
                         </label>
                         <input
                           type="password"
-                          value={profileForm.confirmPassword}
-                          onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                          value={profileForm.confirmPassword || ""}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Confirm new password"
                         />
@@ -1834,7 +1838,6 @@ function App() {
               {currentView === "search" && "Search Services"}
               {currentView === "bookings" && "My Bookings"}
               {currentView === "admin" && "Admin Panel"}
-              {currentView === "profile" && "Profile & Settings"}
             </h1>
           </div>
 
@@ -1918,34 +1921,6 @@ function App() {
           {currentView === "search" && <SearchInterface />}
           {currentView === "admin" && <AdminPanel />}
           {currentView === "bookings" && <BookingInterface />}
-          {currentView === "profile" && (
-            <div className="max-w-4xl mx-auto">
-              <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
-                isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-              }`}>
-                <h2 className={`text-3xl font-bold mb-8 flex items-center ${
-                  isDark ? 'text-white' : 'text-gray-800'
-                }`}>
-                  <div className="bg-indigo-100 dark:bg-indigo-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <User className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  Profile & Settings
-                </h2>
-                <p className={`text-lg mb-8 ${
-                  isDark ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  Manage your account information and preferences
-                </p>
-                <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center font-medium"
-                >
-                  <Edit className="mr-3 h-5 w-5" />
-                  Edit Profile
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
