@@ -100,16 +100,15 @@ function App() {
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
 
-  // Profile editing state
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  // Profile editing state - using separate state variables for stability
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profileCurrentPassword, setProfileCurrentPassword] = useState("");
+  const [profileNewPassword, setProfileNewPassword] = useState("");
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState("");
+  
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileSuccess, setProfileSuccess] = useState("");
@@ -124,20 +123,7 @@ function App() {
     }
   }, []);
 
-  // Effect to properly initialize profile form when editing starts
-  useEffect(() => {
-    if (isEditingProfile && currentUser) {
-      setProfileForm({
-        name: currentUser.name || "",
-        email: currentUser.email || "",
-        phone: currentUser.phone || "",
-        address: currentUser.address || "",
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    }
-  }, [isEditingProfile, currentUser]);
+
 
   // Load services and bookings when authenticated
   useEffect(() => {
@@ -1424,15 +1410,13 @@ function App() {
                   // Reset form when modal is closed
                   if (isEditingProfile) {
                     setIsEditingProfile(false);
-                    setProfileForm({
-                      name: "",
-                      email: "",
-                      phone: "",
-                      address: "",
-                      currentPassword: "",
-                      newPassword: "",
-                      confirmPassword: "",
-                    });
+                    setProfileName("");
+                    setProfileEmail("");
+                    setProfilePhone("");
+                    setProfileAddress("");
+                    setProfileCurrentPassword("");
+                    setProfileNewPassword("");
+                    setProfileConfirmPassword("");
                     setProfileError("");
                     setProfileSuccess("");
                   }
@@ -1551,10 +1535,9 @@ function App() {
                       Full Name *
                     </label>
                     <input
-                      key="name-input"
                       type="text"
-                      value={profileForm.name || ""}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your full name"
                     />
@@ -1565,10 +1548,9 @@ function App() {
                       Email *
                     </label>
                     <input
-                      key="email-input"
                       type="email"
-                      value={profileForm.email || ""}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your email"
                     />
@@ -1579,11 +1561,10 @@ function App() {
                       Phone Number
                     </label>
                     <input
-                      key="phone-input"
                       type="tel"
-                      value={profileForm.phone || ""}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      value={profilePhone}
+                      onChange={(e) => setProfilePhone(e.target.value)}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your phone number"
                     />
                   </div>
@@ -1593,9 +1574,8 @@ function App() {
                       Company Address
                     </label>
                     <textarea
-                      key="address-input"
-                      value={profileForm.address || ""}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, address: e.target.value }))}
+                      value={profileAddress}
+                      onChange={(e) => setProfileAddress(e.target.value)}
                       rows={3}
                       className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your company address"
@@ -1612,10 +1592,9 @@ function App() {
                           Current Password
                         </label>
                         <input
-                          key="current-password-input"
                           type="password"
-                          value={profileForm.currentPassword || ""}
-                          onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          value={profileCurrentPassword}
+                          onChange={(e) => setProfileCurrentPassword(e.target.value)}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Enter current password"
                         />
@@ -1626,10 +1605,9 @@ function App() {
                           New Password
                         </label>
                         <input
-                          key="new-password-input"
                           type="password"
-                          value={profileForm.newPassword || ""}
-                          onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          value={profileNewPassword}
+                          onChange={(e) => setProfileNewPassword(e.target.value)}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Enter new password"
                         />
@@ -1643,10 +1621,9 @@ function App() {
                           Confirm New Password
                         </label>
                         <input
-                          key="confirm-password-input"
                           type="password"
-                          value={profileForm.confirmPassword || ""}
-                          onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          value={profileConfirmPassword}
+                          onChange={(e) => setProfileConfirmPassword(e.target.value)}
                           className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Confirm new password"
                         />
@@ -1735,12 +1712,12 @@ function App() {
   // Profile update handler
   const handleProfileUpdate = async () => {
     // Validation
-    if (!profileForm.name || !profileForm.email) {
+    if (!profileName || !profileEmail) {
       setProfileError("Name and email are required");
       return;
     }
 
-    if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
+    if (profileNewPassword && profileNewPassword !== profileConfirmPassword) {
       setProfileError("New passwords do not match");
       return;
     }
@@ -1752,16 +1729,16 @@ function App() {
 
       // Prepare update data
       const updateData = {
-        name: profileForm.name,
-        email: profileForm.email,
-        phone: profileForm.phone,
-        address: profileForm.address,
+        name: profileName,
+        email: profileEmail,
+        phone: profilePhone,
+        address: profileAddress,
       };
 
       // Add password update if provided
-      if (profileForm.newPassword) {
-        updateData.currentPassword = profileForm.currentPassword;
-        updateData.newPassword = profileForm.newPassword;
+      if (profileNewPassword) {
+        updateData.currentPassword = profileCurrentPassword;
+        updateData.newPassword = profileNewPassword;
       }
 
       // Call the actual API
@@ -1785,17 +1762,14 @@ function App() {
   };
 
   const startProfileEdit = () => {
-    // Use a callback to ensure we have the latest currentUser state
-    setProfileForm(prev => ({
-      ...prev,
-      name: currentUser?.name || "",
-      email: currentUser?.email || "",
-      phone: currentUser?.phone || "",
-      address: currentUser?.address || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    }));
+    // Set individual state variables for stability
+    setProfileName(currentUser?.name || "");
+    setProfileEmail(currentUser?.email || "");
+    setProfilePhone(currentUser?.phone || "");
+    setProfileAddress(currentUser?.address || "");
+    setProfileCurrentPassword("");
+    setProfileNewPassword("");
+    setProfileConfirmPassword("");
     setIsEditingProfile(true);
     setProfileError("");
     setProfileSuccess("");
@@ -1803,16 +1777,13 @@ function App() {
 
   const cancelProfileEdit = () => {
     setIsEditingProfile(false);
-    setProfileForm(prev => ({
-      ...prev,
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    }));
+    setProfileName("");
+    setProfileEmail("");
+    setProfilePhone("");
+    setProfileAddress("");
+    setProfileCurrentPassword("");
+    setProfileNewPassword("");
+    setProfileConfirmPassword("");
     setProfileError("");
     setProfileSuccess("");
   };
