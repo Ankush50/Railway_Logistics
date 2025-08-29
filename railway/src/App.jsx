@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
+import { SecurityProvider, useSecurity } from "./contexts/SecurityContext";
 import {
   Search,
   Upload,
@@ -46,6 +47,12 @@ import {
   getAllBookings,
   updateBookingStatus,
   uploadExcel,
+  updateProfile,
+  changePassword,
+  deleteAccount,
+  getSecurityLog,
+  enableTwoFactor,
+  disableTwoFactor,
 } from "./api";
 
 // Theme Context
@@ -91,9 +98,20 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
 
+  // Security context
+  const { 
+    securityAlerts, 
+    acknowledgeAlert, 
+    clearSecurityAlerts,
+    isAccountLocked,
+    checkSecurityHealth,
+    SECURITY_CONFIG 
+  } = useSecurity();
+
   // UI states
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   // Booking UI states
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -101,6 +119,28 @@ function App() {
   const [bookingQuantity, setBookingQuantity] = useState("");
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
+
+  // Profile editing state
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+
+  // Security state
+  const [showSecuritySettings, setShowSecuritySettings] = useState(false);
+  const [securityLog, setSecurityLog] = useState([]);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
 
   // Check for existing token on app load
   useEffect(() => {
@@ -173,7 +213,23 @@ function App() {
     const [loginError, setLoginError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
+    // Security context for login
+    const { 
+      recordFailedLogin, 
+      recordSuccessfulLogin, 
+      isAccountLocked,
+      failedLoginAttempts,
+      lastFailedLogin 
+    } = useSecurity();
+
     const handleLogin = async () => {
+      // Check if account is locked
+      if (isAccountLocked) {
+        const remainingTime = Math.ceil((SECURITY_CONFIG.LOCKOUT_DURATION - (Date.now() - lastFailedLogin.getTime())) / 1000 / 60);
+        setLoginError(`Account is temporarily locked. Please try again in ${remainingTime} minutes.`);
+        return;
+      }
+
       if (!loginForm.username || !loginForm.password) {
         setLoginError("Please fill in all fields");
         return;
@@ -183,19 +239,29 @@ function App() {
         setLoginLoading(true);
         setLoginError("");
         const response = await login(loginForm);
-        // persist token securely in localStorage and axios header
+        
+        // Login successful
         if (response.token) {
           localStorage.setItem("token", response.token);
           setAuthToken(response.token);
+          recordSuccessfulLogin(); // Record successful login
         }
+        
         setCurrentUser(response.user);
         setIsAuthenticated(true);
         setCurrentView("search");
       } catch (error) {
         console.error("Login failed:", error);
-        setLoginError(
-          error.response?.data?.message || "Login failed. Please try again."
-        );
+        recordFailedLogin(); // Record failed login attempt
+        
+        const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+        setLoginError(errorMessage);
+        
+        // Show remaining attempts
+        if (failedLoginAttempts > 0) {
+          const remainingAttempts = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - failedLoginAttempts;
+          setLoginError(`${errorMessage} (${remainingAttempts} attempts remaining)`);
+        }
       } finally {
         setLoginLoading(false);
       }
@@ -1278,7 +1344,7 @@ function App() {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Details</h2>
@@ -1290,66 +1356,305 @@ function App() {
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            {!isEditingProfile ? (
+              // View Mode
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.email}</p>
+                    </div>
                   </div>
+
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
+                      <p className="font-medium text-gray-900 dark:text-white capitalize">{currentUser.role}</p>
+                    </div>
+                  </div>
+
+                  {currentUser.phone && (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                        <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.phone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentUser.address && (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <LocationIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
+                        <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.address}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 space-y-3">
+                  <button
+                    onClick={startProfileEdit}
+                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    <Edit className="h-5 w-5 mr-2" /> Edit Profile
+                  </button>
+                  <button
+                    onClick={() => setShowSecuritySettings(true)}
+                    className="w-full bg-yellow-600 text-white py-3 px-6 rounded-lg hover:bg-yellow-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    <Shield className="h-5 w-5 mr-2" /> Security Settings
+                  </button>
+                  <button
+                    onClick={() => { setShowProfileModal(false); handleLogout(); }}
+                    className="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    <LogOut className="h-5 w-5 mr-2" /> Logout
+                  </button>
                 </div>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                    <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.email}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
-                    <p className="font-medium text-gray-900 dark:text-white capitalize">{currentUser.role}</p>
-                  </div>
-                </div>
-
-                {currentUser.phone && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.phone}</p>
+            ) : (
+              // Edit Mode
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Update your information</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error and Success Messages */}
+                {profileError && (
+                  <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                    {profileError}
                   </div>
                 )}
 
-                {currentUser.address && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <LocationIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
-                      <p className="font-medium text-gray-900 dark:text-white break-all">{currentUser.address}</p>
-                    </div>
+                {profileSuccess && (
+                  <div className="bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg">
+                    {profileSuccess}
                   </div>
                 )}
-              </div>
 
-              <div className="pt-4">
-                <button
-                  onClick={() => { setShowProfileModal(false); handleLogout(); }}
-                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
-                >
-                  <LogOut className="h-5 w-5 mr-2" /> Logout
-                </button>
+                {/* Edit Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={profileForm.email}
+                      onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Enter your email"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Company Address
+                    </label>
+                    <textarea
+                      value={profileForm.address}
+                      onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                      rows={3}
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Enter your company address"
+                    />
+                  </div>
+
+                  {/* Password Change Section */}
+                  <div className="border-t pt-4">
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Password (Optional)</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.currentPassword}
+                          onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="Enter current password"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.newPassword}
+                          onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })}
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="Enter new password"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Must be at least 8 characters with uppercase, lowercase, number, and special character
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.confirmPassword}
+                          onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security Settings Section */}
+                  <div className="border-t pt-4">
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Security Settings</h4>
+                    
+                    <div className="space-y-4">
+                      {/* Two-Factor Authentication */}
+                      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div>
+                          <h5 className="font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h5>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {twoFactorEnabled ? 'Enabled' : 'Disabled'} - Add an extra layer of security
+                          </p>
+                        </div>
+                        <button
+                          onClick={twoFactorEnabled ? handleDisableTwoFactor : handleEnableTwoFactor}
+                          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                            twoFactorEnabled
+                              ? 'bg-red-600 text-white hover:bg-red-700'
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                          }`}
+                        >
+                          {twoFactorEnabled ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
+
+                      {/* Security Log */}
+                      <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="font-medium text-gray-900 dark:text-white">Security Activity</h5>
+                          <button
+                            onClick={loadSecurityLog}
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
+                          >
+                            Refresh
+                          </button>
+                        </div>
+                        {securityLog.length > 0 ? (
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {securityLog.slice(0, 5).map((log, index) => (
+                              <div key={index} className="text-xs text-gray-600 dark:text-gray-400">
+                                {new Date(log.timestamp).toLocaleString()} - {log.action}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
+                        )}
+                      </div>
+
+                      {/* Account Deletion */}
+                      <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <h5 className="font-medium text-red-800 dark:text-red-200 mb-2">Danger Zone</h5>
+                        <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                          Once you delete your account, there is no going back. Please be certain.
+                        </p>
+                        <button
+                          onClick={() => setShowDeleteAccountModal(true)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                        >
+                          Delete Account
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-4 space-y-3">
+                  <button
+                    onClick={handleProfileUpdate}
+                    disabled={profileLoading}
+                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                  >
+                    {profileLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        Update Profile
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={cancelProfileEdit}
+                    className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -1399,6 +1704,151 @@ function App() {
   };
 
   // Handle logout
+  const handleProfileUpdate = async () => {
+    // Validation
+    if (!profileForm.name || !profileForm.email) {
+      setProfileError("Name and email are required");
+      return;
+    }
+
+    if (profileForm.newPassword && profileForm.newPassword !== profileForm.confirmPassword) {
+      setProfileError("New passwords do not match");
+      return;
+    }
+
+    try {
+      setProfileLoading(true);
+      setProfileError("");
+      setProfileSuccess("");
+
+      // Prepare update data
+      const updateData = {
+        name: profileForm.name,
+        email: profileForm.email,
+        phone: profileForm.phone,
+        address: profileForm.address,
+      };
+
+      // Add password update if provided
+      if (profileForm.newPassword) {
+        updateData.currentPassword = profileForm.currentPassword;
+        updateData.newPassword = profileForm.newPassword;
+      }
+
+      // Call the actual API
+      const response = await updateProfile(updateData);
+      setCurrentUser(response.user);
+      
+      setProfileSuccess("Profile updated successfully!");
+      setIsEditingProfile(false);
+      
+      // Reset form
+      setProfileForm({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setProfileSuccess(""), 3000);
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      setProfileError("Failed to update profile. Please try again.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const startProfileEdit = () => {
+    setProfileForm({
+      name: currentUser.name || "",
+      email: currentUser.email || "",
+      phone: currentUser.phone || "",
+      address: currentUser.address || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setIsEditingProfile(true);
+    setProfileError("");
+    setProfileSuccess("");
+  };
+
+  const cancelProfileEdit = () => {
+    setIsEditingProfile(false);
+    setProfileForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setProfileError("");
+    setProfileSuccess("");
+  };
+
+  // Security functions
+  const handleDeleteAccount = async () => {
+    if (!deleteAccountPassword) {
+      setProfileError("Password is required to delete account");
+      return;
+    }
+
+    try {
+      setDeleteAccountLoading(true);
+      await deleteAccount({ password: deleteAccountPassword });
+      
+      // Account deleted successfully, logout user
+      handleLogout();
+    } catch (error) {
+      setProfileError(error.message || "Failed to delete account");
+    } finally {
+      setDeleteAccountLoading(false);
+    }
+  };
+
+  const handleEnableTwoFactor = async () => {
+    try {
+      const response = await enableTwoFactor();
+      setTwoFactorEnabled(true);
+      setProfileSuccess("Two-factor authentication enabled successfully!");
+      setTimeout(() => setProfileSuccess(""), 3000);
+    } catch (error) {
+      setProfileError(error.message || "Failed to enable two-factor authentication");
+    }
+  };
+
+  const handleDisableTwoFactor = async () => {
+    if (!profileForm.currentPassword) {
+      setProfileError("Current password is required to disable 2FA");
+      return;
+    }
+
+    try {
+      await disableTwoFactor({ password: profileForm.currentPassword });
+      setTwoFactorEnabled(false);
+      setProfileSuccess("Two-factor authentication disabled successfully!");
+      setTimeout(() => setProfileSuccess(""), 3000);
+    } catch (error) {
+      setProfileError(error.message || "Failed to disable two-factor authentication");
+    }
+  };
+
+  const loadSecurityLog = async () => {
+    try {
+      const log = await getSecurityLog();
+      setSecurityLog(log);
+    } catch (error) {
+      console.error("Failed to load security log:", error);
+    }
+  };
+
   const handleLogout = () => {
     apiLogout();
     try { localStorage.removeItem("token"); } catch(_) {}
@@ -1455,6 +1905,16 @@ function App() {
 
           {/* Right side controls */}
           <div className="flex items-center space-x-4">
+            {/* Security Status Indicator */}
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${
+                checkSecurityHealth().healthy ? 'bg-green-500' : 'bg-red-500'
+              }`} title={checkSecurityHealth().healthy ? 'Security OK' : 'Security Issues Detected'} />
+              <span className="hidden lg:block text-xs text-gray-500 dark:text-gray-400">
+                {checkSecurityHealth().score}/100
+              </span>
+            </div>
+
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -1508,6 +1968,64 @@ function App() {
         </div>
       )}
 
+      {/* Security Alerts Display */}
+      {securityAlerts.length > 0 && (
+        <div className={`${sidebarOpen ? 'lg:ml-64' : ''} px-4 sm:px-6 lg:px-8 mt-4`}>
+          <div className="border rounded-xl px-6 py-4 shadow-lg bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-700">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">Security Alerts</h3>
+              <button
+                onClick={clearSecurityAlerts}
+                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="space-y-2">
+              {securityAlerts.slice(0, 3).map((alert) => (
+                <div key={alert.id} className={`p-3 rounded-lg ${
+                  alert.level === 'critical' ? 'bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
+                  alert.level === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' :
+                  'bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${
+                        alert.level === 'critical' ? 'text-red-800 dark:text-red-200' :
+                        alert.level === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
+                        'text-blue-800 dark:text-blue-200'
+                      }`}>
+                        {alert.message}
+                      </p>
+                      <p className={`text-xs ${
+                        alert.level === 'critical' ? 'text-red-600 dark:text-red-400' :
+                        alert.level === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {new Date(alert.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                    {!alert.acknowledged && (
+                      <button
+                        onClick={() => acknowledgeAlert(alert.id)}
+                        className="ml-3 text-xs px-2 py-1 rounded bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                      >
+                        Acknowledge
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {securityAlerts.length > 3 && (
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 text-center">
+                  +{securityAlerts.length - 3} more alerts
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-6 transition-all duration-300`}>
         <div className="px-4 sm:px-6 lg:px-8">
@@ -1519,6 +2037,189 @@ function App() {
 
       {/* Profile Modal */}
       <ProfileModal />
+
+      {/* Security Settings Modal */}
+      {showSecuritySettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Security Settings</h2>
+                <button
+                  onClick={() => setShowSecuritySettings(false)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Two-Factor Authentication */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Two-Factor Authentication</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Add an extra layer of security to your account
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        twoFactorEnabled
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      }`}>
+                        {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                      <button
+                        onClick={twoFactorEnabled ? handleDisableTwoFactor : handleEnableTwoFactor}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          twoFactorEnabled
+                            ? 'bg-red-600 text-white hover:bg-red-700'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                      >
+                        {twoFactorEnabled ? 'Disable' : 'Enable'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {!twoFactorEnabled && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Two-factor authentication adds an extra layer of security by requiring a second form of verification.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Security Log */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Security Activity Log</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Monitor your account's security events
+                      </p>
+                    </div>
+                    <button
+                      onClick={loadSecurityLog}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Refresh Log
+                    </button>
+                  </div>
+                  
+                  {securityLog.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {securityLog.map((log, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-white dark:bg-gray-600 rounded-lg">
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-white">{log.action}</span>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{log.details}</p>
+                          </div>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Shield className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
+                      <p className="text-gray-500 dark:text-gray-400">No security events recorded</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Account Deletion */}
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Danger Zone</h3>
+                  <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                    Once you delete your account, there is no going back. All your data, bookings, and account information will be permanently deleted.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowSecuritySettings(false);
+                      setShowDeleteAccountModal(true);
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="mx-auto w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
+                  <Shield className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Account</h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  This action cannot be undone. All your data will be permanently deleted.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={deleteAccountPassword}
+                    onChange={(e) => setDeleteAccountPassword(e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your password to confirm"
+                  />
+                </div>
+
+                {profileError && (
+                  <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
+                    {profileError}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowDeleteAccountModal(false);
+                    setDeleteAccountPassword("");
+                    setProfileError("");
+                  }}
+                  className="px-5 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountLoading || !deleteAccountPassword}
+                  className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center"
+                >
+                  {deleteAccountLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                    ) : (
+                      'Delete Account'
+                    )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Booking Modal */}
       {bookingModalOpen && selectedService && (
@@ -1641,11 +2342,13 @@ function App() {
   );
 }
 
-// Wrap App with ThemeProvider
+// Wrap App with ThemeProvider and SecurityProvider
 const AppWithTheme = () => (
-  <ThemeProvider>
-    <App />
-  </ThemeProvider>
+  <SecurityProvider>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </SecurityProvider>
 );
 
 export default AppWithTheme;
