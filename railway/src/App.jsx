@@ -533,7 +533,12 @@ function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-6">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
+        <div className="pointer-events-none absolute inset-0 opacity-20">
+          <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-blue-300 blur-3xl animate-pulse" />
+          <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-indigo-400 blur-3xl animate-bounce" style={{animationDuration:'6s'}} />
+          <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-cyan-300 blur-3xl animate-bounce" style={{animationDuration:'7s', animationDirection:'reverse'}} />
+        </div>
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -562,6 +567,7 @@ function App() {
                 onChange={(e) =>
                   setLoginForm({ ...loginForm, username: e.target.value })
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleLogin(); } }}
               />
             </div>
 
@@ -578,6 +584,7 @@ function App() {
                   onChange={(e) =>
                     setLoginForm({ ...loginForm, password: e.target.value })
                   }
+                  onKeyDown={(e) => { if (e.key === 'Enter') { handleLogin(); } }}
                 />
                 <button
                   type="button"
@@ -681,7 +688,13 @@ function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 flex items-center justify-center p-6">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-green-900 via-green-800 to-emerald-900">
+        {/* Animated doodles background */}
+        <div className="pointer-events-none absolute inset-0 opacity-20">
+          <div className="absolute -top-10 -right-10 w-72 h-72 rounded-full bg-emerald-300 blur-3xl animate-pulse" />
+          <div className="absolute top-1/3 -left-16 w-64 h-64 rounded-full bg-green-400 blur-3xl animate-bounce" style={{animationDuration:'6s'}} />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-teal-300 blur-3xl animate-bounce" style={{animationDuration:'7s', animationDirection:'reverse'}} />
+        </div>
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -712,6 +725,7 @@ function App() {
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, name: e.target.value })
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleRegister(); } }}
               />
             </div>
 
@@ -727,6 +741,7 @@ function App() {
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, email: e.target.value })
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleRegister(); } }}
               />
             </div>
 
@@ -742,6 +757,7 @@ function App() {
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, username: e.target.value })
                 }
+                onKeyDown={(e) => { if (e.key === 'Enter') { handleRegister(); } }}
               />
             </div>
 
@@ -758,6 +774,7 @@ function App() {
                   onChange={(e) =>
                     setRegisterForm({ ...registerForm, password: e.target.value })
                   }
+                  onKeyDown={(e) => { if (e.key === 'Enter') { handleRegister(); } }}
                 />
                 <button
                   type="button"
@@ -790,6 +807,7 @@ function App() {
                       confirmPassword: e.target.value,
                     })
                   }
+                  onKeyDown={(e) => { if (e.key === 'Enter') { handleRegister(); } }}
                 />
                 <button
                   type="button"
@@ -1071,7 +1089,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg gap-4">
+              <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg gap-4">
                 <Tag className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
