@@ -124,6 +124,21 @@ function App() {
     }
   }, []);
 
+  // Effect to properly initialize profile form when editing starts
+  useEffect(() => {
+    if (isEditingProfile && currentUser) {
+      setProfileForm({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "",
+        address: currentUser.address || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    }
+  }, [isEditingProfile, currentUser]);
+
   // Load services and bookings when authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -1404,7 +1419,24 @@ function App() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Details</h2>
               <button
-                onClick={() => setShowProfileModal(false)}
+                onClick={() => {
+                  setShowProfileModal(false);
+                  // Reset form when modal is closed
+                  if (isEditingProfile) {
+                    setIsEditingProfile(false);
+                    setProfileForm({
+                      name: "",
+                      email: "",
+                      phone: "",
+                      address: "",
+                      currentPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    });
+                    setProfileError("");
+                    setProfileSuccess("");
+                  }
+                }}
                 className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <X className="h-5 w-5" />
@@ -1519,6 +1551,7 @@ function App() {
                       Full Name *
                     </label>
                     <input
+                      key="name-input"
                       type="text"
                       value={profileForm.name || ""}
                       onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
@@ -1532,6 +1565,7 @@ function App() {
                       Email *
                     </label>
                     <input
+                      key="email-input"
                       type="email"
                       value={profileForm.email || ""}
                       onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
@@ -1545,10 +1579,11 @@ function App() {
                       Phone Number
                     </label>
                     <input
+                      key="phone-input"
                       type="tel"
                       value={profileForm.phone || ""}
                       onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter your phone number"
                     />
                   </div>
@@ -1558,6 +1593,7 @@ function App() {
                       Company Address
                     </label>
                     <textarea
+                      key="address-input"
                       value={profileForm.address || ""}
                       onChange={(e) => setProfileForm(prev => ({ ...prev, address: e.target.value }))}
                       rows={3}
@@ -1576,6 +1612,7 @@ function App() {
                           Current Password
                         </label>
                         <input
+                          key="current-password-input"
                           type="password"
                           value={profileForm.currentPassword || ""}
                           onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
@@ -1589,6 +1626,7 @@ function App() {
                           New Password
                         </label>
                         <input
+                          key="new-password-input"
                           type="password"
                           value={profileForm.newPassword || ""}
                           onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
@@ -1605,6 +1643,7 @@ function App() {
                           Confirm New Password
                         </label>
                         <input
+                          key="confirm-password-input"
                           type="password"
                           value={profileForm.confirmPassword || ""}
                           onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
@@ -1732,16 +1771,8 @@ function App() {
       setProfileSuccess("Profile updated successfully!");
       setIsEditingProfile(false);
       
-      // Reset form
-      setProfileForm({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+      // Don't reset form immediately - let user see success message
+      // Form will be reset when they close the modal
 
       // Clear success message after 3 seconds
       setTimeout(() => setProfileSuccess(""), 3000);
@@ -1754,15 +1785,17 @@ function App() {
   };
 
   const startProfileEdit = () => {
-    setProfileForm({
-      name: currentUser.name || "",
-      email: currentUser.email || "",
-      phone: currentUser.phone || "",
-      address: currentUser.address || "",
+    // Use a callback to ensure we have the latest currentUser state
+    setProfileForm(prev => ({
+      ...prev,
+      name: currentUser?.name || "",
+      email: currentUser?.email || "",
+      phone: currentUser?.phone || "",
+      address: currentUser?.address || "",
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-    });
+    }));
     setIsEditingProfile(true);
     setProfileError("");
     setProfileSuccess("");
@@ -1770,7 +1803,8 @@ function App() {
 
   const cancelProfileEdit = () => {
     setIsEditingProfile(false);
-    setProfileForm({
+    setProfileForm(prev => ({
+      ...prev,
       name: "",
       email: "",
       phone: "",
@@ -1778,7 +1812,7 @@ function App() {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-    });
+    }));
     setProfileError("");
     setProfileSuccess("");
   };
@@ -1876,18 +1910,7 @@ function App() {
               )}
             </button>
 
-            {/* Profile Settings Button */}
-            <button
-              onClick={() => setCurrentView("profile")}
-              className={`p-2 rounded-lg transition-colors ${
-                isDark 
-                  ? 'text-gray-300 hover:bg-gray-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-              title="Profile Settings"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
+
           </div>
         </div>
       </nav>
