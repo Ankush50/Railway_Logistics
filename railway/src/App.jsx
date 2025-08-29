@@ -1062,12 +1062,14 @@ function App() {
                     ₹{service.pricePerTon}/ton
                   </p>
                 </div>
-                <button
-                  onClick={() => onBook(service)}
-                  className="ml-auto bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow hover:shadow-md font-medium"
-                >
-                  Book
-                </button>
+                {currentUser?.role !== 'admin' && (
+                  <button
+                    onClick={() => onBook(service)}
+                    className="ml-auto bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow hover:shadow-md font-medium"
+                  >
+                    Book
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1520,6 +1522,7 @@ function App() {
 
   // Booking Interface
   const BookingInterface = () => {
+    const [expandedUserForBookingId, setExpandedUserForBookingId] = useState(null);
     return (
       <div className="max-w-4xl mx-auto">
         <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
@@ -1531,7 +1534,7 @@ function App() {
             <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
               <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
+            {currentUser?.role === 'admin' ? 'All Bookings' : 'User Bookings'}
           </h2>
           
           {loading ? (
@@ -1606,6 +1609,16 @@ function App() {
                       }`}>
                         {booking.status}
                       </span>
+                      {currentUser?.role === 'admin' && (
+                        <button
+                          onClick={() => setExpandedUserForBookingId(expandedUserForBookingId === booking._id ? null : booking._id)}
+                          className={`p-2 rounded-lg ${isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                          title={expandedUserForBookingId === booking._id ? 'Hide user details' : 'Show user details'}
+                          aria-label="Toggle user details"
+                        >
+                          <User className="h-5 w-5" />
+                        </button>
+                      )}
                       {currentUser?.role === 'admin' && booking.status === 'Pending' && (
                         <div className="flex gap-2">
                           <button
@@ -1624,6 +1637,34 @@ function App() {
                       )}
                     </div>
                   </div>
+                  {currentUser?.role === 'admin' && expandedUserForBookingId === booking._id && (
+                    <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                      <div className="flex items-center mb-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${isDark ? 'bg-gray-500' : 'bg-white'}`}>
+                          <User className="h-5 w-5" />
+                        </div>
+                        <h5 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Name</p>
+                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.name || '—'}</p>
+                        </div>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Username</p>
+                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.username || '—'}</p>
+                        </div>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Email</p>
+                          <p className={`font-medium break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.email || '—'}</p>
+                        </div>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Role</p>
+                          <p className={`font-medium capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.role || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1637,7 +1678,7 @@ function App() {
   const Sidebar = () => {
     const navItems = [
       { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
-      { id: "bookings", label: "My Bookings", icon: Eye, color: "text-green-600" },
+      { id: "bookings", label: "User Bookings", icon: Eye, color: "text-green-600" },
       ...(currentUser?.role === "admin" ? [{ id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }] : []),
     ];
 
@@ -1697,6 +1738,10 @@ function App() {
 
   // Handle booking (open modal)
   const handleBookService = (service) => {
+    if (currentUser?.role === 'admin') {
+      setError('Admins cannot make bookings.');
+      return;
+    }
     setSelectedService(service);
     setBookingQuantity("");
     setBookingModalOpen(true);
@@ -1870,7 +1915,7 @@ function App() {
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {currentView === "search" && "Search Services"}
-              {currentView === "bookings" && "My Bookings"}
+              {currentView === "bookings" && "User Bookings"}
               {currentView === "admin" && "Admin Panel"}
             </h1>
           </div>
@@ -2089,7 +2134,7 @@ function App() {
                   onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
                 >
-                  View My Bookings
+                  View User Bookings
                 </button>
                 <button
                   onClick={() => setBookingSuccess(null)}
