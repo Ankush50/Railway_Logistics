@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Calendar, MapPin, Package, DollarSign, User, Clock } from 'lucide-react';
-import TrackingTimeline from './TrackingTimeline';
+import StatusChain from './StatusChain';
 
 const BookingDetailsModal = ({ booking, isOpen, onClose, isDark, currentUser, onStatusUpdate }) => {
   if (!isOpen || !booking) return null;
@@ -149,10 +149,15 @@ const BookingDetailsModal = ({ booking, isOpen, onClose, isDark, currentUser, on
               )}
             </div>
 
-            {/* Right Column - Tracking Timeline */}
-            <div>
-              <TrackingTimeline currentStatus={booking.status} isDark={isDark} />
-            </div>
+                         {/* Right Column - Status Chain */}
+             <div>
+               <StatusChain 
+                 currentStatus={booking.status} 
+                 isDark={isDark} 
+                 isAdmin={isAdmin}
+                 onStatusUpdate={onStatusUpdate}
+               />
+             </div>
           </div>
         </div>
       </div>

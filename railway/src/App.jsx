@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import TrackingTimeline from "./components/TrackingTimeline";
+import StatusChain from "./components/StatusChain";
 import BookingDetailsModal from "./components/BookingDetailsModal";
 import {
   Search,
@@ -518,6 +518,12 @@ function App() {
     } catch (error) {
       console.error("Failed to update status:", error);
       setError("Failed to update status");
+    }
+  };
+
+  const handleStatusUpdateFromChain = async (newStatus) => {
+    if (selectedBooking) {
+      await handleStatusUpdate(selectedBooking._id, newStatus);
     }
   };
 
@@ -1839,6 +1845,19 @@ function App() {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Status Chain - Show for all bookings */}
+                  <div className="mt-4">
+                    <StatusChain 
+                      currentStatus={booking.status} 
+                      isDark={isDark} 
+                      isAdmin={currentUser?.role === 'admin'}
+                      onStatusUpdate={currentUser?.role === 'admin' ? 
+                        (newStatus) => handleStatusUpdate(booking._id, newStatus) : 
+                        undefined
+                      }
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -2460,7 +2479,7 @@ function App() {
         }}
         isDark={isDark}
         currentUser={currentUser}
-        onStatusUpdate={handleStatusUpdate}
+        onStatusUpdate={handleStatusUpdateFromChain}
       />
     </div>
   );
