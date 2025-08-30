@@ -103,6 +103,7 @@ const ProfileModal = ({
   isEditingProfile,
   setIsEditingProfile,
   currentUser,
+  isDark,
   startProfileEdit,
   cancelProfileEdit,
   handleLogout,
@@ -2246,6 +2247,7 @@ function App() {
         isEditingProfile={isEditingProfile}
         setIsEditingProfile={setIsEditingProfile}
         currentUser={currentUser}
+        isDark={isDark}
         startProfileEdit={startProfileEdit}
         cancelProfileEdit={cancelProfileEdit}
         handleLogout={handleLogout}

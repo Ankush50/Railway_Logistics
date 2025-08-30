@@ -2,10 +2,15 @@ import React, { useState, useRef } from 'react';
 import { User, Camera, X, Loader2 } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
 
-const ProfilePicture = ({ user, isDark, onUpdate, size = 'md' }) => {
+const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md' }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // Debug modal state
+  React.useEffect(() => {
+    console.log('Upload modal state:', showUploadModal);
+  }, [showUploadModal]);
   const fileInputRef = useRef(null);
 
   const sizeClasses = {
@@ -23,6 +28,7 @@ const ProfilePicture = ({ user, isDark, onUpdate, size = 'md' }) => {
   };
 
   const handleFileSelect = async (event) => {
+    console.log('File selected:', event.target.files[0]);
     const file = event.target.files[0];
     if (!file) return;
 
@@ -107,7 +113,10 @@ const ProfilePicture = ({ user, isDark, onUpdate, size = 'md' }) => {
         {/* Upload/Change Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
           <button
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => {
+              console.log('Opening upload modal');
+              setShowUploadModal(true);
+            }}
             className={`p-1 rounded-full ${
               isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
             } transition-colors`}
@@ -140,12 +149,12 @@ const ProfilePicture = ({ user, isDark, onUpdate, size = 'md' }) => {
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
           <div className={`max-w-md w-full rounded-lg shadow-xl ${
             isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
           }`}>
             <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Upload Profile Picture</h3>
+              <h3 className="text-lg font-semibold mb-4">Upload Profile Picture - DEBUG: Modal is open</h3>
               
               <div className="space-y-4">
                 <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
