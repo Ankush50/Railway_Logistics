@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import TailwindTest from "./TailwindTest";
+import TrackingTimeline from "./components/TrackingTimeline";
+import BookingDetailsModal from "./components/BookingDetailsModal";
 import {
   Search,
   Upload,
@@ -423,6 +424,8 @@ function App() {
   const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
   const [cancellationLoading, setCancellationLoading] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [bookingDetailsModalOpen, setBookingDetailsModalOpen] = useState(false);
 
   // Profile editing state - using separate state variables for stability
   const [profileName, setProfileName] = useState("");
@@ -503,6 +506,18 @@ function App() {
       setError("Failed to load bookings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (bookingId, newStatus) => {
+    try {
+      await updateBookingStatus(bookingId, newStatus);
+      await loadBookings();
+      setError('');
+      setSuccess('Status updated successfully');
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      setError("Failed to update status");
     }
   };
 
@@ -1691,12 +1706,35 @@ function App() {
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             : booking.status === 'Cancellation Requested'
                               ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
-                              : booking.status === 'Cancelled'
-                                ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            : booking.status === 'Cancelled'
+                              ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                            : booking.status === 'Goods Received at Origin'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                            : booking.status === 'In Transit'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+                            : booking.status === 'Arrived at Destination'
+                              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400'
+                            : booking.status === 'Ready for Pickup'
+                              ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400'
+                            : booking.status === 'Out for Delivery'
+                              ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-400'
+                            : booking.status === 'Delivered'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                       }`}>
                         {booking.status}
                       </span>
+                      
+                      {/* View Details Button */}
+                      <button
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setBookingDetailsModalOpen(true);
+                        }}
+                        className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
+                      >
+                        View Details
+                      </button>
                       
                       {/* Admin Action Buttons */}
                       {currentUser?.role === 'admin' && booking.status === 'Pending' && (
@@ -2041,11 +2079,6 @@ function App() {
     <div className={`min-h-screen transition-colors duration-300 ${
       isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
     }`}>
-      {/* Tailwind Test Component */}
-      <div className="fixed top-4 right-4 z-50">
-        <TailwindTest />
-      </div>
-      
       {/* Sidebar */}
       <Sidebar />
 
@@ -2416,6 +2449,19 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Booking Details Modal */}
+      <BookingDetailsModal
+        booking={selectedBooking}
+        isOpen={bookingDetailsModalOpen}
+        onClose={() => {
+          setBookingDetailsModalOpen(false);
+          setSelectedBooking(null);
+        }}
+        isDark={isDark}
+        currentUser={currentUser}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

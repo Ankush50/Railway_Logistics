@@ -66,7 +66,7 @@ exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested'];
+    const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested', 'Goods Received at Origin', 'In Transit', 'Arrived at Destination', 'Ready for Pickup', 'Out for Delivery', 'Delivered'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
