@@ -143,6 +143,7 @@ export const uploadProfilePicture = async (file) => {
     
     console.log('Uploading to:', `${API_URL}/profile/upload-picture`);
     console.log('File:', file.name, file.size, file.type);
+    console.log('API URL:', API_URL);
     
     const response = await axios.post(`${API_URL}/profile/upload-picture`, formData, {
       headers: {
@@ -165,7 +166,21 @@ export const uploadProfilePicture = async (file) => {
         headers: error.config?.headers
       }
     });
-    throw error;
+    
+    // Provide more specific error messages
+    if (error.response?.status === 500) {
+      throw new Error('Server error: Please try again later or contact support.');
+    } else if (error.response?.status === 413) {
+      throw new Error('File too large: Please select a smaller image (max 5MB).');
+    } else if (error.response?.status === 400) {
+      throw new Error(error.response.data?.message || 'Invalid file format. Please select an image file.');
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error('Upload timeout: Please check your connection and try again.');
+    } else if (!error.response) {
+      throw new Error('Network error: Please check your connection and try again.');
+    } else {
+      throw new Error(error.response.data?.message || 'Upload failed. Please try again.');
+    }
   }
 };
 

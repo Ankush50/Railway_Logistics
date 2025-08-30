@@ -129,6 +129,7 @@ const ProfileModal = ({
   profileSuccess,
   setProfileSuccess,
   handleProfileUpdate,
+  refreshUserData,
 }) => {
   if (!showProfileModal) return null;
 
@@ -240,11 +241,23 @@ const ProfileModal = ({
                         const file = e.target.files[0];
                         if (file) {
                           try {
+                            // Validate file type
+                            if (!file.type.startsWith('image/')) {
+                              alert('Please select an image file');
+                              return;
+                            }
+
+                            // Validate file size (5MB limit)
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('File size must be less than 5MB');
+                              return;
+                            }
+
                             await uploadProfilePicture(file);
                             refreshUserData();
                           } catch (error) {
                             console.error('Upload failed:', error);
-                            alert('Failed to upload profile picture. Please try again.');
+                            alert(error.message || 'Failed to upload profile picture. Please try again.');
                           }
                         }
                       };
@@ -436,11 +449,23 @@ const ProfileModal = ({
                         const file = e.target.files[0];
                         if (file) {
                           try {
+                            // Validate file type
+                            if (!file.type.startsWith('image/')) {
+                              alert('Please select an image file');
+                              return;
+                            }
+
+                            // Validate file size (5MB limit)
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('File size must be less than 5MB');
+                              return;
+                            }
+
                             await uploadProfilePicture(file);
                             refreshUserData();
                           } catch (error) {
                             console.error('Upload failed:', error);
-                            alert('Failed to upload profile picture. Please try again.');
+                            alert(error.message || 'Failed to upload profile picture. Please try again.');
                           }
                         }
                       };
@@ -2335,6 +2360,7 @@ function App() {
         profileSuccess={profileSuccess}
         setProfileSuccess={setProfileSuccess}
         handleProfileUpdate={handleProfileUpdate}
+        refreshUserData={refreshUserData}
       />
 
       {/* Booking Modal */}

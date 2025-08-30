@@ -163,6 +163,45 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test uploads directory endpoint
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    const profilesDir = path.join(uploadsDir, 'profiles');
+    
+    // Check if directories exist
+    const uploadsExists = fs.existsSync(uploadsDir);
+    const profilesExists = fs.existsSync(profilesDir);
+    
+    // Try to create directories if they don't exist
+    if (!uploadsExists) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    if (!profilesExists) {
+      fs.mkdirSync(profilesDir, { recursive: true });
+    }
+    
+    res.status(200).json({
+      status: 'OK',
+      uploadsDir: uploadsDir,
+      profilesDir: profilesDir,
+      uploadsExists: uploadsExists,
+      profilesExists: profilesExists,
+      canWrite: true
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      error: error.message,
+      uploadsDir: path.join(__dirname, 'uploads'),
+      profilesDir: path.join(__dirname, 'uploads', 'profiles')
+    });
+  }
+});
+
 // 404 handler - More informative
 app.use('*', (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.url}`);
