@@ -52,7 +52,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     setIsUploading(true);
     
     try {
-      await uploadProfilePicture(file);
+      const response = await uploadProfilePicture(file);
       if (onUpdate) {
         onUpdate();
       }
@@ -72,7 +72,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     setSelectedFile(null);
     
     try {
-      await uploadProfilePicture(croppedFile);
+      const response = await uploadProfilePicture(croppedFile);
       if (onUpdate) {
         onUpdate();
       }
@@ -95,10 +95,11 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
 
     setIsDeleting(true);
     try {
-      await deleteProfilePicture();
+      const response = await deleteProfilePicture();
       if (onUpdate) {
         onUpdate();
       }
+      alert('Profile picture deleted successfully!');
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Failed to delete profile picture. Please try again.');
@@ -111,6 +112,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     if (!user.profilePicture) return null;
     // Add timestamp to prevent caching issues
     const baseUrl = getProfilePictureUrl(user._id);
+    console.log('Profile picture URL:', baseUrl);
     return `${baseUrl}&t=${Date.now()}`;
   };
 
@@ -129,8 +131,20 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
               alt={`${user.name}'s profile`}
               className="w-full h-full object-cover"
               onError={(e) => {
+                console.error('Failed to load profile picture:', e);
                 e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
+                // Show fallback user icon
+                const userIcon = e.target.nextSibling;
+                if (userIcon) {
+                  userIcon.style.display = 'flex';
+                }
+              }}
+              onLoad={(e) => {
+                // Hide fallback icon when image loads successfully
+                const userIcon = e.target.nextSibling;
+                if (userIcon) {
+                  userIcon.style.display = 'none';
+                }
               }}
             />
           ) : null}
@@ -185,9 +199,12 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
               <h3 className="text-lg font-semibold mb-4">Upload Profile Picture</h3>
               
               <div className="space-y-4">
-                <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
-                  isDark ? 'border-gray-600' : 'border-gray-300'
-                }`}>
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                    isDark ? 'border-gray-600 hover:border-gray-500' : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Upload className={`mx-auto mb-2 ${iconSizes.lg} ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`} />

@@ -107,6 +107,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Content-Length'],
   maxAge: 86400 // 24 hours
 }));
 
@@ -132,6 +133,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     res.set('X-Frame-Options', 'DENY');
   }
 }));
+
+
 
 // Database connection with security
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'devsecret';

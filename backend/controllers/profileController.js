@@ -58,7 +58,19 @@ exports.uploadProfilePicture = async (req, res, next) => {
 
     res.status(200).json({ 
       success: true, 
-      data: { profilePicture: req.file.filename },
+      data: { 
+        profilePicture: req.file.filename,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          phone: user.phone,
+          address: user.address,
+          profilePicture: user.profilePicture
+        }
+      },
       message: 'Profile picture updated successfully' 
     });
   } catch (err) {
@@ -84,11 +96,22 @@ exports.getProfilePicture = async (req, res, next) => {
     const picturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
     
     if (!fs.existsSync(picturePath)) {
+      console.error('Profile picture file not found:', picturePath);
       return res.status(404).json({ success: false, message: 'Profile picture file not found' });
     }
 
+    // Set proper headers for image serving
+    res.set({
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Content-Type-Options': 'nosniff'
+    });
+
     res.sendFile(picturePath);
   } catch (err) {
+    console.error('Error serving profile picture:', err);
     next(err);
   }
 };
@@ -119,6 +142,18 @@ exports.deleteProfilePicture = async (req, res, next) => {
 
     res.status(200).json({ 
       success: true, 
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          phone: user.phone,
+          address: user.address,
+          profilePicture: user.profilePicture
+        }
+      },
       message: 'Profile picture deleted successfully' 
     });
   } catch (err) {

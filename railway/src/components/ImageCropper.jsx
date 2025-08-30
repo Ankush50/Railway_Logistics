@@ -8,8 +8,10 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (imageFile) {
@@ -24,25 +26,30 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
 
   const handleImageLoad = (e) => {
     const img = e.target;
-    const canvas = canvasRef.current;
+    const container = containerRef.current;
     
-    if (canvas && img) {
-      // Calculate the scale to fit image in canvas
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
+    if (container && img) {
+      // Get container dimensions
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      
+      // Calculate the scale to fit image in container
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
       
-      const scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+      const scale = Math.min(containerWidth / imgWidth, containerHeight / imgHeight);
       const scaledWidth = imgWidth * scale;
       const scaledHeight = imgHeight * scale;
       
+      setImageDimensions({ width: scaledWidth, height: scaledHeight });
+      
       // Center the crop area
+      const cropSize = Math.min(scaledWidth, scaledHeight) * 0.8; // 80% of the smaller dimension
       setCrop({
-        x: (canvasWidth - scaledWidth) / 2,
-        y: (canvasHeight - scaledHeight) / 2,
-        width: scaledWidth,
-        height: scaledHeight
+        x: (containerWidth - cropSize) / 2,
+        y: (containerHeight - cropSize) / 2,
+        width: cropSize,
+        height: cropSize
       });
       
       setImageLoaded(true);
@@ -50,7 +57,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   };
 
   const handleMouseDown = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
@@ -65,11 +72,11 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left - dragStart.x;
     const y = e.clientY - rect.top - dragStart.y;
     
-    // Constrain crop area within canvas bounds
+    // Constrain crop area within container bounds
     const maxX = rect.width - crop.width;
     const maxY = rect.height - crop.height;
     
@@ -89,10 +96,10 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   };
 
   const handleCrop = () => {
-    if (!imageRef.current || !canvasRef.current) return;
+    if (!imageRef.current || !containerRef.current) return;
     
     const image = imageRef.current;
-    const canvas = canvasRef.current;
+    const container = containerRef.current;
     
     // Create a new canvas for the cropped image
     const croppedCanvas = document.createElement('canvas');
@@ -103,15 +110,15 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
     croppedCanvas.height = crop.height;
     
     // Calculate the actual image coordinates based on scale
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
     const imgWidth = image.naturalWidth;
     const imgHeight = image.naturalHeight;
-    const scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+    const scale = Math.min(containerWidth / imgWidth, containerHeight / imgHeight);
     
     // Calculate source coordinates in the original image
-    const sourceX = (crop.x - (canvasWidth - imgWidth * scale) / 2) / scale;
-    const sourceY = (crop.y - (canvasHeight - imgHeight * scale) / 2) / scale;
+    const sourceX = (crop.x - (containerWidth - imgWidth * scale) / 2) / scale;
+    const sourceY = (crop.y - (containerHeight - imgHeight * scale) / 2) / scale;
     const sourceWidth = crop.width / scale;
     const sourceHeight = crop.height / scale;
     
@@ -201,30 +208,33 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
             </div>
           </div>
           
-          <div className="relative overflow-hidden rounded-lg border-2 border-gray-300">
-            <canvas
-              ref={canvasRef}
-              width={400}
-              height={400}
-              className="block w-full h-auto cursor-move"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-            >
-              <img
-                ref={imageRef}
-                src={imageSrc}
-                alt="Crop preview"
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  maxWidth: '100%',
-                  height: 'auto'
-                }}
-                onLoad={handleImageLoad}
-                crossOrigin="anonymous"
-              />
-            </canvas>
+          <div 
+            ref={containerRef}
+            className="relative overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100"
+            style={{ width: '400px', height: '400px' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <img
+              ref={imageRef}
+              src={imageSrc}
+              alt="Crop preview"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: 'auto',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: `translate(-50%, -50%) rotate(${rotation}deg)`
+              }}
+              onLoad={handleImageLoad}
+              crossOrigin="anonymous"
+            />
             
             {/* Crop overlay - only show when image is loaded */}
             {imageLoaded && (
