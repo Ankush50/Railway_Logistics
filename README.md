@@ -53,11 +53,7 @@ A comprehensive web-based logistics management system designed to streamline rai
 - [x] **Backup & Recovery** - Automated data backup systems
 - [x] **Data Export** - Export functionality for reports
 
-<<<<<<< HEAD
 ## 🏗️ Technology Stack
-=======
-## 🏗️ Architecture
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 ### Frontend
 - **React 18** - Modern React with hooks and functional components
@@ -71,128 +67,12 @@ A comprehensive web-based logistics management system designed to streamline rai
 - **MongoDB** - NoSQL database with Mongoose ODM
 - **JWT Authentication** - Secure token-based authentication
 
-<<<<<<< HEAD
 ### Storage & Deployment
 - **Cloud Storage** - Cloudinary for profile pictures
 - **Local Storage** - Fallback local file storage
 - **Database** - MongoDB Atlas cloud database
 - **Frontend Hosting** - Netlify
 - **Backend Hosting** - Render
-
-## 🔒 Security Features
-=======
-### Storage
-- **Cloud Storage** - Cloudinary for profile pictures
-- **Local Storage** - Fallback local file storage
-- **Database** - MongoDB Atlas cloud database
-
-### Deployment
-- **Frontend** - Netlify hosting
-- **Backend** - Render cloud hosting
-- **Database** - MongoDB Atlas cloud database
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- npm 8+
-- MongoDB Atlas account
-- Cloudinary account (optional)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/railway-logistics.git
-   cd railway-logistics
-   ```
-
-2. **Install dependencies**
-   ```bash
-   # Install backend dependencies
-   cd backend
-   npm install
-   
-   # Install frontend dependencies
-   cd ../railway
-   npm install
-   ```
-
-3. **Environment Setup**
-   ```bash
-   # Backend environment variables
-   cd backend
-   cp env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Start Development Servers**
-   ```bash
-   # Start backend server
-   cd backend
-   npm run dev
-   
-   # Start frontend server (in new terminal)
-   cd railway
-   npm run dev
-   ```
-
-## 📋 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user
-
-### Services
-- `GET /api/services` - Get all services
-- `POST /api/services` - Create new service (Admin)
-- `PUT /api/services/:id` - Update service (Admin)
-- `DELETE /api/services/:id` - Delete service (Admin)
-
-### Bookings
-- `GET /api/bookings` - Get user bookings
-- `POST /api/bookings` - Create new booking
-- `PUT /api/bookings/:id` - Update booking
-- `DELETE /api/bookings/:id` - Cancel booking
-
-### Profile
-- `GET /api/profile/picture/:userId` - Get profile picture
-- `POST /api/profile/upload-picture` - Upload profile picture
-- `DELETE /api/profile/picture` - Delete profile picture
-
-### Admin
-- `POST /api/upload` - Excel file upload for services
-- `GET /api/debug/profile-pictures` - Profile picture debugging
-- `GET /api/config/test` - Configuration testing
-
-## 🔧 Configuration
-
-### Environment Variables
-```env
-# Database
-MONGODB_URI=your_mongodb_connection_string
-
-# JWT
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRE=7d
-
-# Server
-PORT=5000
-NODE_ENV=production
-
-# CORS
-CORS_ORIGIN=your_frontend_url
-
-# File Upload
-MAX_FILE_SIZE=5242880
-
-# Cloudinary (Optional)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-```
 
 ## 📱 Mobile Features
 
@@ -208,37 +88,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 - **Optimization** - Automatic image optimization
 - **CDN** - Content delivery network integration
 
-## 🧪 Testing
-
-### Backend Testing
-```bash
-cd backend
-npm run test:security
-npm audit
-```
-
-### Frontend Testing
-```bash
-cd railway
-npm run build
-npm run preview
-```
-
-## 📦 Deployment
-
-### Frontend (Netlify)
-- Automatic deployment from main branch
-- Environment variable configuration
-- Custom domain support
-
-### Backend (Render)
-- Automatic deployment from main branch
-- Environment variable management
-- Health check monitoring
-- Auto-scaling capabilities
-
 ## 🔒 Security Checklist
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 - [x] **Authentication** - JWT-based secure authentication
 - [x] **Authorization** - Role-based access control
@@ -260,23 +110,6 @@ npm run preview
 - [x] **Database Indexing** - Optimized database queries
 - [x] **API Rate Limiting** - Performance protection
 
-<<<<<<< HEAD
-## 📱 Mobile Features
-
-### Touch Support
-- **Gesture Recognition** - Swipe and pinch gestures
-- **Touch Cropping** - Finger-based image cropping
-- **Responsive Design** - Optimized for all screen sizes
-- **PWA Support** - Installable as mobile app
-
-### Performance
-- **Lazy Loading** - Images and components load on demand
-- **Caching** - Intelligent browser caching
-- **Optimization** - Automatic image optimization
-- **CDN** - Content delivery network integration
-
-=======
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 ## 🌐 Browser Support
 
 - **Chrome** 90+
@@ -287,7 +120,6 @@ npm run preview
 
 ## 🤝 Contributing
 
-<<<<<<< HEAD
 We welcome contributions from the community! Please follow these guidelines:
 
 ### Before Contributing
@@ -317,24 +149,6 @@ We welcome contributions from the community! Please follow these guidelines:
 - **New features** - Add value to the system
 - **Documentation** - Improve code clarity
 - **Testing** - Enhance test coverage
-=======
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation** - Check the API documentation
-- **Issues** - Report bugs via GitHub Issues
-- **Discussions** - Join community discussions
-- **Email** - Contact the development team
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 ## 🗺️ Roadmap
 
@@ -356,7 +170,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Blockchain verification
 - [ ] Advanced reporting
 
-<<<<<<< HEAD
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -367,14 +180,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discussions** - Join community discussions
 - **Pull Requests** - Submit improvements and features
 
-=======
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 ---
 
 **Built with ❤️ for the Railway Logistics Industry**
 
-<<<<<<< HEAD
 *Last updated: August 2025*
-=======
-*Last updated: December 2024*
->>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
