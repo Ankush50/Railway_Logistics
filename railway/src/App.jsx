@@ -419,6 +419,9 @@ function App() {
   const [bookingQuantity, setBookingQuantity] = useState("");
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
+  const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [cancellationLoading, setCancellationLoading] = useState(false);
 
   // Profile editing state - using separate state variables for stability
   const [profileName, setProfileName] = useState("");
@@ -1631,42 +1634,55 @@ function App() {
                 >
                   <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
                     <div className="space-y-3 flex-1 min-w-0">
-                      <h4 className={`text-lg sm:text-xl font-bold break-words ${
+                      <h4 className={`text-xl font-bold break-words ${
                         isDark ? 'text-white' : 'text-gray-800'
                       }`}>
                         {booking.route || booking.serviceId?.route}
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                        <div className="flex items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-600 rounded-lg min-w-0">
-                          <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500 flex-shrink-0" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-600 rounded-lg min-w-0">
+                          <Package className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Quantity</p>
-                            <p className={`font-medium truncate text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
+                            <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {booking.quantity} tons
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg min-w-0">
-                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-green-500 flex-shrink-0" />
+                        <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg min-w-0">
+                          <Tag className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total</p>
-                            <p className={`font-bold truncate text-sm sm:text-base ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                            <p className={`font-bold truncate ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                               ₹{booking.total}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-0">
-                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500 flex-shrink-0" />
+                        <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-0">
+                          <Calendar className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Booked On</p>
-                            <p className={`font-medium truncate text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Booked On</p>
+                            <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {new Date(booking.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 flex-shrink-0">
+                      {/* User Details Button - Show on top for mobile */}
+                      {currentUser?.role === 'admin' && (
+                        <button
+                          onClick={() => setExpandedUserForBookingId(expandedUserForBookingId === booking._id ? null : booking._id)}
+                          className={`p-2 rounded-lg ${isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                          title={expandedUserForBookingId === booking._id ? 'Hide user details' : 'Show user details'}
+                          aria-label="Toggle user details"
+                        >
+                          <User className="h-5 w-5" />
+                        </button>
+                      )}
+                      
+                      {/* Status Badge */}
                       <span className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap ${
                         booking.status === 'Confirmed'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
@@ -1680,16 +1696,8 @@ function App() {
                       }`}>
                         {booking.status}
                       </span>
-                      {currentUser?.role === 'admin' && (
-                        <button
-                          onClick={() => setExpandedUserForBookingId(expandedUserForBookingId === booking._id ? null : booking._id)}
-                          className={`p-2 rounded-lg ${isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                          title={expandedUserForBookingId === booking._id ? 'Hide user details' : 'Show user details'}
-                          aria-label="Toggle user details"
-                        >
-                          <User className="h-5 w-5" />
-                        </button>
-                      )}
+                      
+                      {/* Admin Action Buttons */}
                       {currentUser?.role === 'admin' && booking.status === 'Pending' && (
                         <div className="flex flex-col sm:flex-row gap-2">
                           <button
@@ -1742,24 +1750,13 @@ function App() {
                           </button>
                         </div>
                       )}
+                      
+                      {/* User Action Buttons */}
                       {currentUser?.role !== 'admin' && booking.status === 'Pending' && (
                         <button
-                          onClick={async () => {
-                            if (window.confirm('Are you sure you want to request cancellation for this booking?')) {
-                              try {
-                                await requestCancellation(booking._id);
-                                await loadBookings();
-                                setError(''); // Clear any previous errors
-                                // Show success message
-                                setSuccess('Cancellation request submitted successfully! Admin will review and approve.');
-                                // Clear success message after 3 seconds
-                                setTimeout(() => setSuccess(''), 3000);
-                              } catch (error) {
-                                console.error('Cancellation request failed:', error);
-                                setSuccess(''); // Clear any previous success messages
-                                setError('Failed to request cancellation. Please try again.');
-                              }
-                            }
+                          onClick={() => {
+                            setBookingToCancel(booking);
+                            setCancellationModalOpen(true);
                           }}
                           className="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors text-sm whitespace-nowrap"
                         >
@@ -1773,6 +1770,8 @@ function App() {
                       )}
                     </div>
                   </div>
+                  
+                  {/* User Details Section - Now shows below for better mobile experience */}
                   {currentUser?.role === 'admin' && expandedUserForBookingId === booking._id && (
                     <div className={`mt-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
                       <div className="flex items-center mb-3">
@@ -2264,6 +2263,101 @@ function App() {
                     </>
                   ) : (
                     'Confirm Booking'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancellation Confirmation Modal */}
+      {cancellationModalOpen && bookingToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden ${
+            isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Confirm Cancellation</h3>
+                <button
+                  onClick={() => {
+                    setCancellationModalOpen(false);
+                    setBookingToCancel(null);
+                  }}
+                  className={`p-2 rounded-lg ${isDark ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="space-y-3 mb-6">
+                <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Are you sure you want to request cancellation for this booking?
+                </p>
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Route</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {bookingToCancel.route || bookingToCancel.serviceId?.route}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Quantity</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {bookingToCancel.quantity} tons
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setCancellationModalOpen(false);
+                    setBookingToCancel(null);
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium ${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      setCancellationLoading(true);
+                      console.log('Attempting to cancel booking:', bookingToCancel._id);
+                      console.log('API URL being used:', import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+                      const result = await requestCancellation(bookingToCancel._id);
+                      console.log('Cancellation result:', result);
+                      await loadBookings();
+                      setError(''); // Clear any previous errors
+                      setSuccess('Cancellation request submitted successfully! Admin will review and approve.');
+                      setTimeout(() => setSuccess(''), 3000);
+                      setCancellationModalOpen(false);
+                      setBookingToCancel(null);
+                    } catch (error) {
+                      console.error('Cancellation request failed:', error);
+                      console.error('Error details:', error.response?.data || error.message);
+                      console.error('Error status:', error.response?.status);
+                      console.error('Error response:', error.response);
+                      setSuccess(''); // Clear any previous success messages
+                      let errorMessage = 'Failed to request cancellation. ';
+                      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+                        errorMessage += 'Please make sure the backend server is running.';
+                      } else {
+                        errorMessage += error.response?.data?.message || error.message || 'Unknown error';
+                      }
+                      setError(errorMessage);
+                    } finally {
+                      setCancellationLoading(false);
+                    }
+                  }}
+                  disabled={cancellationLoading}
+                  className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {cancellationLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Request Cancellation'
                   )}
                 </button>
               </div>
