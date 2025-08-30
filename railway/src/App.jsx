@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from "react";
 import StatusChain from "./components/StatusChain";
 import BookingDetailsModal from "./components/BookingDetailsModal";
 import ProfilePicture from "./components/ProfilePicture";
+import NotificationBell from "./components/NotificationBell";
 import {
   Search,
   Upload,
@@ -491,7 +492,6 @@ function App() {
     try {
       setLoading(true);
       const userData = await getMe();
-      console.log('Auth check - User data loaded:', userData);
       setCurrentUser(userData);
       setIsAuthenticated(true);
       setCurrentView("search");
@@ -531,12 +531,6 @@ function App() {
     try {
       setLoading(true);
       const list = currentUser?.role === 'admin' ? await getAllBookings() : await getUserBookings();
-      console.log('Loaded bookings with user data:', list.map(booking => ({
-        id: booking._id,
-        userId: booking.userId,
-        hasProfilePicture: !!booking.userId?.profilePicture,
-        profilePicture: booking.userId?.profilePicture
-      })));
       setBookings(list);
       setError(''); // Clear any error messages
       setSuccess(''); // Clear any success messages
@@ -569,11 +563,8 @@ function App() {
 
   const refreshUserData = async () => {
     try {
-      console.log('Refreshing user data...');
-      
       // Force a complete refresh by clearing any cached data
       const userData = await getMe();
-      console.log('Refreshed user data:', userData);
       
       // Update the current user state
       setCurrentUser(userData);
@@ -2212,6 +2203,9 @@ function App() {
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
+            {/* Notification Bell */}
+            <NotificationBell isDark={isDark} />
+
             {/* Profile button */}
             <button
               onClick={() => setShowProfileModal(true)}
@@ -2234,8 +2228,6 @@ function App() {
                 </span>
               )}
             </button>
-
-
           </div>
         </div>
       </nav>

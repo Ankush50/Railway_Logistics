@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const RailwayService = require('../models/RailwayService');
+const { createNotification } = require('./notificationController');
 
 // Create a booking
 exports.createBooking = async (req, res, next) => {
@@ -34,6 +35,21 @@ exports.createBooking = async (req, res, next) => {
     // Update service availability
     service.available -= quantity;
     await service.save();
+    
+    // Create notification for admin about new booking
+    if (req.user.role === 'user') {
+      // Find admin users to notify
+      const adminUsers = await require('../models/User').find({ role: 'admin' });
+      for (const admin of adminUsers) {
+        await createNotification(
+          admin._id,
+          'New Booking Request',
+          `New booking request from ${req.user.name} for ${service.route}`,
+          'admin',
+          booking._id
+        );
+      }
+    }
     
     res.status(201).json({ success: true, data: booking });
   } catch (err) {
@@ -79,6 +95,29 @@ exports.updateBookingStatus = async (req, res, next) => {
     const previousStatus = booking.status;
     booking.status = status;
     await booking.save();
+    
+    // Create notification for user about status change
+    const statusMessages = {
+      'Confirmed': 'Your booking has been confirmed!',
+      'Cancelled': 'Your booking has been cancelled.',
+      'Declined': 'Your booking has been declined.',
+      'Goods Received at Origin': 'Your goods have been received at the origin station.',
+      'In Transit': 'Your goods are now in transit.',
+      'Arrived at Destination': 'Your goods have arrived at the destination.',
+      'Ready for Pickup': 'Your goods are ready for pickup.',
+      'Out for Delivery': 'Your goods are out for delivery.',
+      'Delivered': 'Your goods have been delivered successfully!'
+    };
+    
+    if (statusMessages[status]) {
+      await createNotification(
+        booking.userId,
+        'Booking Status Update',
+        statusMessages[status],
+        'status_update',
+        booking._id
+      );
+    }
     
     // If booking is being cancelled or declined, restore the service capacity
     if ((status === 'Cancelled' || status === 'Declined') && 

@@ -58,13 +58,6 @@ exports.login = async (req, res, next) => {
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    console.log('getMe - User data:', {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      profilePicture: user.profilePicture,
-      hasProfilePicture: !!user.profilePicture
-    });
     res.status(200).json({ success: true, user });
   } catch (err) {
     next(err);

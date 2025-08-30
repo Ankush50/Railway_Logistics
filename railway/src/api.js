@@ -141,10 +141,6 @@ export const uploadProfilePicture = async (file) => {
     const formData = new FormData();
     formData.append('profilePicture', file);
     
-    console.log('Uploading to:', `${API_URL}/profile/upload-picture`);
-    console.log('File:', file.name, file.size, file.type);
-    console.log('API URL:', API_URL);
-    
     const response = await axios.post(`${API_URL}/profile/upload-picture`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -152,7 +148,6 @@ export const uploadProfilePicture = async (file) => {
       timeout: 30000 // 30 second timeout
     });
     
-    console.log('Upload response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Upload error details:', {
@@ -208,6 +203,26 @@ export const getProfilePictureUrl = (userId = null) => {
   }
   
   const url = userId ? `${baseUrl}/api/profile/picture/${userId}` : `${baseUrl}/api/profile/picture`;
-  console.log('Constructed profile picture URL:', url);
   return url;
+};
+
+// Notification API
+export const getNotifications = async () => {
+  const response = await axios.get(`${API_URL}/notifications`);
+  return response.data.data;
+};
+
+export const getUnreadCount = async () => {
+  const response = await axios.get(`${API_URL}/notifications/unread-count`);
+  return response.data.data.count;
+};
+
+export const markNotificationAsRead = async (id) => {
+  const response = await axios.put(`${API_URL}/notifications/${id}/read`);
+  return response.data;
+};
+
+export const markAllNotificationsAsRead = async () => {
+  const response = await axios.put(`${API_URL}/notifications/mark-all-read`);
+  return response.data;
 };
