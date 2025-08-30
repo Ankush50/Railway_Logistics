@@ -66,17 +66,66 @@ exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined'];
+    const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
+    
+    const booking = await Booking.findById(id).populate('serviceId');
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    
+    const previousStatus = booking.status;
+    booking.status = status;
+    await booking.save();
+    
+    // If booking is being cancelled or declined, restore the service capacity
+    if ((status === 'Cancelled' || status === 'Declined') && 
+        (previousStatus !== 'Cancelled' && previousStatus !== 'Declined')) {
+      const service = await RailwayService.findById(booking.serviceId._id);
+      if (service) {
+        service.available += booking.quantity;
+        await service.save();
+      }
+    }
+    
+    res.status(200).json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// User: request cancellation for pending booking
+exports.requestCancellation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the booking
     const booking = await Booking.findById(id);
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
-    booking.status = status;
+    
+    // Check if user owns this booking
+    if (booking.userId.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to cancel this booking' });
+    }
+    
+    // Check if booking is in pending status
+    if (booking.status !== 'Pending') {
+      return res.status(400).json({ success: false, message: 'Can only cancel pending bookings' });
+    }
+    
+    // Update status to cancellation requested
+    booking.status = 'Cancellation Requested';
     await booking.save();
-    res.status(200).json({ success: true, data: booking });
+    
+    res.status(200).json({ 
+      success: true, 
+      data: booking,
+      message: 'Cancellation request submitted successfully. Admin will review and approve.'
+    });
   } catch (err) {
     next(err);
   }

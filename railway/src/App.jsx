@@ -45,6 +45,7 @@ import {
   getUserBookings,
   getAllBookings,
   updateBookingStatus,
+  requestCancellation,
   uploadExcel,
   updateProfile,
   changePassword,
@@ -400,6 +401,7 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -473,8 +475,11 @@ function App() {
       setLoading(true);
       const services = await getServices();
       setRailwayData(services);
+      setError(''); // Clear any error messages
+      setSuccess(''); // Clear any success messages
     } catch (error) {
       console.error("Failed to load services:", error);
+      setSuccess(''); // Clear any previous success messages
       setError("Failed to load services");
     } finally {
       setLoading(false);
@@ -486,8 +491,11 @@ function App() {
       setLoading(true);
       const list = currentUser?.role === 'admin' ? await getAllBookings() : await getUserBookings();
       setBookings(list);
+      setError(''); // Clear any error messages
+      setSuccess(''); // Clear any success messages
     } catch (error) {
       console.error("Failed to load bookings:", error);
+      setSuccess(''); // Clear any previous success messages
       setError("Failed to load bookings");
     } finally {
       setLoading(false);
@@ -522,6 +530,8 @@ function App() {
         setCurrentUser(response.user);
         setIsAuthenticated(true);
         setCurrentView("search");
+        setError(''); // Clear any error messages
+        setSuccess(''); // Clear any success messages
       } catch (error) {
         console.error("Login failed:", error);
         setLoginError(
@@ -676,6 +686,8 @@ function App() {
         setCurrentUser(response.user);
         setIsAuthenticated(true);
         setCurrentView("search");
+        setError(''); // Clear any error messages
+        setSuccess(''); // Clear any success messages
       } catch (error) {
         console.error("Registration failed:", error);
         setRegisterError(
@@ -887,8 +899,11 @@ function App() {
         setSearchLoading(true);
         const results = await searchServices(searchForm);
         setSearchResults(results);
+        setError(''); // Clear any error messages
+        setSuccess(''); // Clear any success messages
       } catch (error) {
         console.error("Search failed:", error);
+        setSuccess(''); // Clear any previous success messages
         setError("Search failed. Please try again.");
       } finally {
         setSearchLoading(false);
@@ -896,20 +911,20 @@ function App() {
     };
 
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-8 mb-8 transition-colors duration-300 ${
+      <div className="max-w-6xl mx-auto">
+        <div className={`rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8 transition-colors duration-300 ${
           isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}>
-          <h2 className={`text-3xl font-bold mb-8 flex items-center ${
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center ${
             isDark ? 'text-white' : 'text-gray-800'
           }`}>
-            <div className="bg-blue-100 dark:bg-blue-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-              <Search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="bg-blue-100 dark:bg-blue-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
             </div>
             Find Railway Services
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div>
               <label className={`block text-sm font-medium mb-3 ${
                 isDark ? 'text-gray-200' : 'text-gray-700'
@@ -1005,11 +1020,11 @@ function App() {
               </div>
             </div>
 
-            <div className="md:col-span-4">
+            <div className="sm:col-span-2 lg:col-span-4">
               <button
                 onClick={handleSearch}
                 disabled={searchLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-8 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 sm:py-4 px-6 sm:px-8 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {searchLoading ? (
                   <>
@@ -1153,7 +1168,8 @@ function App() {
         !newService.contact ||
         !newService.date
       ) {
-        alert("Please fill all fields");
+        setSuccess(''); // Clear any success messages
+        setError("Please fill all fields");
         return;
       }
 
@@ -1185,9 +1201,14 @@ function App() {
           date: "",
         });
         setShowAddForm(false);
+        setError(''); // Clear any error messages
+        setSuccess(editingService ? 'Service updated successfully!' : 'Service added successfully!');
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccess(''), 3000);
       } catch (error) {
         console.error("Failed to add service:", error);
-        alert("Failed to add service. Please try again.");
+        setSuccess(''); // Clear any success messages
+        setError("Failed to add service. Please try again.");
       } finally {
         setAdminLoading(false);
       }
@@ -1229,9 +1250,14 @@ function App() {
           setAdminLoading(true);
           await deleteService(id);
           await loadServices(); // Reload services
+          setError(''); // Clear any error messages
+          setSuccess('Service deleted successfully!');
+          // Clear success message after 3 seconds
+          setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
           console.error("Failed to delete service:", error);
-          alert("Failed to delete service. Please try again.");
+          setSuccess(''); // Clear any success messages
+          setError("Failed to delete service. Please try again.");
         } finally {
           setAdminLoading(false);
         }
@@ -1245,10 +1271,14 @@ function App() {
           setAdminLoading(true);
           await uploadExcel(file);
           await loadServices(); // Reload services
-          alert("Excel file uploaded successfully!");
+          setError(''); // Clear any error messages
+          setSuccess('Excel file uploaded successfully!');
+          // Clear success message after 3 seconds
+          setTimeout(() => setSuccess(''), 3000);
         } catch (error) {
           console.error("Failed to upload Excel:", error);
-          alert("Failed to upload Excel file. Please try again.");
+          setSuccess(''); // Clear any success messages
+          setError('Failed to upload Excel file. Please try again.');
         } finally {
           setAdminLoading(false);
         }
@@ -1260,13 +1290,13 @@ function App() {
         <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
           isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}>
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-0 mb-6 sm:mb-8">
             <div>
-              <h2 className={`text-3xl font-bold flex items-center ${
+              <h2 className={`text-2xl sm:text-3xl font-bold flex items-center ${
                 isDark ? 'text-white' : 'text-gray-800'
               }`}>
-                <div className="bg-purple-100 dark:bg-purple-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                  <Shield className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <div className="bg-purple-100 dark:bg-purple-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                  <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 Admin Panel
               </h2>
@@ -1276,16 +1306,16 @@ function App() {
                 Manage railway services and system data
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end">
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center ${
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center ${
                   showAddForm
                     ? 'bg-gray-500 text-white hover:bg-gray-600'
                     : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
                 }`}
               >
-                <Plus className="mr-2 h-5 w-5" />
+                <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 {showAddForm ? 'Cancel' : 'Add Service'}
               </button>
               <button
@@ -1300,13 +1330,13 @@ function App() {
                   a.click();
                   window.URL.revokeObjectURL(url);
                 }}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center font-medium"
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center font-medium"
               >
-                <Download className="mr-2 h-5 w-5" />
+                <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Download Template
               </button>
-              <label className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center cursor-pointer font-medium">
-                <Upload className="mr-2 h-5 w-5" />
+              <label className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center cursor-pointer font-medium">
+                <Upload className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Upload Excel
                 <input
                   type="file"
@@ -1320,17 +1350,17 @@ function App() {
 
           {/* Add Service Form */}
           {showAddForm && (
-            <div className={`mb-8 p-6 border rounded-xl ${
+            <div className={`mb-6 sm:mb-8 p-4 sm:p-6 border rounded-xl ${
               isDark 
                 ? 'bg-gray-700 border-gray-600' 
                 : 'bg-gray-50 border-gray-200'
             }`}>
-              <h3 className={`text-xl font-semibold mb-6 ${
+              <h3 className={`text-lg sm:text-xl font-semibold mb-4 sm:mb-6 ${
                 isDark ? 'text-white' : 'text-gray-800'
               }`}>
                 {editingService ? 'Edit Service' : 'Add New Service'}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <input
                   type="text"
                   placeholder="Route (e.g., Delhi - Mumbai)"
@@ -1437,20 +1467,22 @@ function App() {
                     setNewService({ ...newService, date: e.target.value })
                   }
                 />
-                <div className="md:col-span-4">
-                  <button
-                    onClick={handleAddService}
-                    disabled={adminLoading}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 mr-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-                  >
-                    {adminLoading ? (editingService ? "Updating..." : "Adding...") : (editingService ? "Update Service" : "Add Service")}
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="bg-gray-500 text-white px-8 py-3 rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
-                  >
-                    Cancel
-                  </button>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleAddService}
+                      disabled={adminLoading}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium flex-1 sm:flex-none"
+                    >
+                      {adminLoading ? (editingService ? "Updating..." : "Adding...") : (editingService ? "Update Service" : "Add Service")}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="bg-gray-500 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl hover:bg-gray-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium flex-1 sm:flex-none"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1463,32 +1495,32 @@ function App() {
                 isDark ? 'bg-gray-700' : 'bg-gray-50'
               }`}>
                 <tr>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Route
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Time
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Capacity
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Price/Ton
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Date
                   </th>
-                  <th className={`px-6 py-4 text-left text-sm font-medium ${
+                  <th className={`px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
                     Actions
@@ -1502,46 +1534,46 @@ function App() {
                   <tr key={service._id} className={`hover:${
                     isDark ? 'bg-gray-700' : 'bg-gray-50'
                   } transition-colors duration-200`}>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                       {service.route}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                       {service.departure} - {service.arrival}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                       {service.available}/{service.capacity} tons
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                       ₹{service.pricePerTon}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                       {service.date}
                     </td>
-                    <td className={`px-6 py-4 text-sm ${
+                    <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}>
-                      <div className="flex space-x-3">
+                      <div className="flex space-x-2 sm:space-x-3">
                         <button 
                           onClick={() => handleEditService(service)}
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                         >
-                          <Edit className="h-5 w-5" />
+                          <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteService(service._id)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                       </div>
                     </td>
@@ -1559,17 +1591,17 @@ function App() {
   const BookingInterface = () => {
     const [expandedUserForBookingId, setExpandedUserForBookingId] = useState(null);
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
+      <div className="max-w-6xl mx-auto">
+        <div className={`rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 transition-colors duration-300 ${
           isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}>
-          <h2 className={`text-3xl font-bold mb-8 flex items-center ${
+          <h2 className={`text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center ${
             isDark ? 'text-white' : 'text-gray-800'
           }`}>
-            <div className="bg-green-100 dark:bg-green-900/20 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-              <Eye className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+              <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
             </div>
-            {currentUser?.role === 'admin' ? 'All Bookings' : 'User Bookings'}
+            {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
           </h2>
           
           {loading ? (
@@ -1591,56 +1623,60 @@ function App() {
               {bookings.map((booking) => (
                 <div
                   key={booking._id}
-                  className={`border rounded-xl p-6 transition-all duration-200 hover:shadow-lg ${
+                  className={`border rounded-xl p-4 sm:p-6 transition-all duration-200 hover:shadow-lg ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
                       : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-3">
-                      <h4 className={`text-xl font-bold ${
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+                    <div className="space-y-3 flex-1 min-w-0">
+                      <h4 className={`text-lg sm:text-xl font-bold break-words ${
                         isDark ? 'text-white' : 'text-gray-800'
                       }`}>
                         {booking.route || booking.serviceId?.route}
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
-                          <Package className="h-5 w-5 mr-3 text-blue-500" />
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
-                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                        <div className="flex items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-600 rounded-lg min-w-0">
+                          <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Quantity</p>
+                            <p className={`font-medium truncate text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {booking.quantity} tons
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                          <Tag className="h-5 w-5 mr-3 text-green-500" />
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                            <p className={`font-bold ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                        <div className="flex items-center p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg min-w-0">
+                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-green-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Total</p>
+                            <p className={`font-bold truncate text-sm sm:text-base ${isDark ? 'text-green-400' : 'text-green-600'}`}>
                               ₹{booking.total}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <Calendar className="h-5 w-5 mr-3 text-blue-500" />
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Booked On</p>
-                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        <div className="flex items-center p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-0">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Booked On</p>
+                            <p className={`font-medium truncate text-sm sm:text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {new Date(booking.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
+                      <span className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap ${
                         booking.status === 'Confirmed'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                           : booking.status === 'Declined'
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            : booking.status === 'Cancellation Requested'
+                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+                              : booking.status === 'Cancelled'
+                                ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                       }`}>
                         {booking.status}
                       </span>
@@ -1655,47 +1691,112 @@ function App() {
                         </button>
                       )}
                       {currentUser?.role === 'admin' && booking.status === 'Pending' && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <button
-                            onClick={async () => { await updateBookingStatus(booking._id, 'Confirmed'); await loadBookings(); }}
-                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                            onClick={async () => { 
+                              await updateBookingStatus(booking._id, 'Confirmed'); 
+                              await loadBookings(); 
+                              setError(''); // Clear any error messages
+                              setSuccess(''); // Clear any success messages
+                            }}
+                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm whitespace-nowrap"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={async () => { await updateBookingStatus(booking._id, 'Declined'); await loadBookings(); }}
-                            className="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                            onClick={async () => { 
+                              await updateBookingStatus(booking._id, 'Declined'); 
+                              await loadBookings(); 
+                              setError(''); // Clear any error messages
+                              setSuccess(''); // Clear any success messages
+                            }}
+                            className="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm whitespace-nowrap"
                           >
                             Decline
                           </button>
                         </div>
                       )}
+                      {currentUser?.role === 'admin' && booking.status === 'Cancellation Requested' && (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            onClick={async () => { 
+                              await updateBookingStatus(booking._id, 'Cancelled'); 
+                              await loadBookings(); 
+                              setError(''); // Clear any error messages
+                              setSuccess(''); // Clear any success messages
+                            }}
+                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm whitespace-nowrap"
+                          >
+                            Approve Cancellation
+                          </button>
+                          <button
+                            onClick={async () => { 
+                              await updateBookingStatus(booking._id, 'Pending'); 
+                              await loadBookings(); 
+                              setError(''); // Clear any error messages
+                              setSuccess(''); // Clear any success messages
+                            }}
+                            className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm whitespace-nowrap"
+                          >
+                            Reject Cancellation
+                          </button>
+                        </div>
+                      )}
+                      {currentUser?.role !== 'admin' && booking.status === 'Pending' && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to request cancellation for this booking?')) {
+                              try {
+                                await requestCancellation(booking._id);
+                                await loadBookings();
+                                setError(''); // Clear any previous errors
+                                // Show success message
+                                setSuccess('Cancellation request submitted successfully! Admin will review and approve.');
+                                // Clear success message after 3 seconds
+                                setTimeout(() => setSuccess(''), 3000);
+                              } catch (error) {
+                                console.error('Cancellation request failed:', error);
+                                setSuccess(''); // Clear any previous success messages
+                                setError('Failed to request cancellation. Please try again.');
+                              }
+                            }
+                          }}
+                          className="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors text-sm whitespace-nowrap"
+                        >
+                          Request Cancellation
+                        </button>
+                      )}
+                      {currentUser?.role !== 'admin' && booking.status === 'Cancellation Requested' && (
+                        <span className="px-3 py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-sm whitespace-nowrap">
+                          Cancellation Pending
+                        </span>
+                      )}
                     </div>
                   </div>
                   {currentUser?.role === 'admin' && expandedUserForBookingId === booking._id && (
-                    <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                    <div className={`mt-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
                       <div className="flex items-center mb-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${isDark ? 'bg-gray-500' : 'bg-white'}`}>
-                          <User className="h-5 w-5" />
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mr-2 sm:mr-3 ${isDark ? 'bg-gray-500' : 'bg-white'}`}>
+                          <User className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <h5 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
+                        <h5 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
                           <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Name</p>
-                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.name || '—'}</p>
+                          <p className={`font-medium truncate text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.name || '—'}</p>
                         </div>
-                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
                           <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Username</p>
-                          <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.username || '—'}</p>
+                          <p className={`font-medium truncate text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.username || '—'}</p>
                         </div>
-                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
                           <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Email</p>
-                          <p className={`font-medium break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.email || '—'}</p>
+                          <p className={`font-medium break-all text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.email || '—'}</p>
                         </div>
-                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'}`}>
+                        <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
                           <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Mobile</p>
-                          <p className={`font-medium break-all ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.phone || '—'}</p>
+                          <p className={`font-medium break-all text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{booking.userId?.phone || '—'}</p>
                         </div>
                       </div>
                     </div>
@@ -1713,7 +1814,7 @@ function App() {
   const Sidebar = () => {
     const navItems = [
       { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
-      { id: "bookings", label: "User Bookings", icon: Eye, color: "text-green-600" },
+      { id: "bookings", label: currentUser?.role === 'admin' ? "User Bookings" : "My Bookings", icon: Eye, color: "text-green-600" },
       ...(currentUser?.role === "admin" ? [{ id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }] : []),
     ];
 
@@ -1751,6 +1852,8 @@ function App() {
                   onClick={() => {
                     setCurrentView(item.id);
                     setSidebarOpen(false);
+                    setError(''); // Clear any error messages
+                    setSuccess(''); // Clear any success messages
                   }}
                   className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
                     currentView === item.id
@@ -1804,6 +1907,8 @@ function App() {
       await loadBookings();
       await loadServices();
       setBookingModalOpen(false);
+      setError(''); // Clear any error messages
+      setSuccess(''); // Clear any success messages
       setBookingSuccess({
         route: selectedService.route,
         quantity: quantityNum,
@@ -1811,6 +1916,7 @@ function App() {
       });
     } catch (error) {
       console.error("Booking failed:", error);
+      setSuccess(''); // Clear any previous success messages
       setError("Booking failed. Please try again.");
     } finally {
       setBookingSubmitting(false);
@@ -1855,6 +1961,8 @@ function App() {
       setCurrentUser(response.user);
       
       setProfileSuccess("Profile updated successfully!");
+      setError(''); // Clear any previous errors
+      setSuccess(''); // Clear any previous success messages
       setIsEditingProfile(false);
       
       // Don't reset form immediately - let user see success message
@@ -1864,6 +1972,7 @@ function App() {
       setTimeout(() => setProfileSuccess(""), 3000);
     } catch (error) {
       console.error("Profile update failed:", error);
+      setSuccess(''); // Clear any previous success messages
       setProfileError("Failed to update profile. Please try again.");
     } finally {
       setProfileLoading(false);
@@ -1907,6 +2016,8 @@ function App() {
     setBookings([]);
     setRailwayData([]);
     setSearchResults([]);
+    setError(''); // Clear any error messages
+    setSuccess(''); // Clear any success messages
   };
 
   // Show loading screen while checking auth
@@ -1950,7 +2061,7 @@ function App() {
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               {currentView === "search" && "Search Services"}
-              {currentView === "bookings" && "User Bookings"}
+              {currentView === "bookings" && (currentUser?.role === 'admin' ? "User Bookings" : "My Bookings")}
               {currentView === "admin" && "Admin Panel"}
             </h1>
           </div>
@@ -2009,6 +2120,29 @@ function App() {
                 onClick={() => setError("")}
                 className={`p-1 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/30 transition-colors ${
                   isDark ? 'text-red-300 hover:text-red-200' : 'text-red-600 hover:text-red-800'
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Display */}
+      {success && (
+        <div className={`${sidebarOpen ? 'lg:ml-64' : ''} px-4 sm:px-6 lg:px-8 mt-4`}>
+          <div className={`border rounded-xl px-6 py-4 shadow-lg ${
+            isDark 
+              ? 'bg-green-900/20 border-green-700 text-green-300' 
+              : 'bg-green-100 border-green-400 text-green-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{success}</span>
+              <button
+                onClick={() => setSuccess("")}
+                className={`p-1 rounded-lg hover:bg-green-200 dark:hover:bg-green-800/30 transition-colors ${
+                  isDark ? 'text-green-300 hover:text-green-200' : 'text-green-600 hover:text-green-800'
                 }`}
               >
                 <X className="h-5 w-5" />
@@ -2169,7 +2303,7 @@ function App() {
                   onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
                 >
-                  View User Bookings
+                  View My Bookings
                 </button>
                 <button
                   onClick={() => setBookingSuccess(null)}

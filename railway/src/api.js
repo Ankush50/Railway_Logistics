@@ -117,6 +117,11 @@ export const updateBookingStatus = async (id, status) => {
   return response.data.data;
 };
 
+export const requestCancellation = async (id) => {
+  const response = await axios.put(`${API_URL}/bookings/${id}/cancel-request`);
+  return response.data.data;
+};
+
 // Upload API
 export const uploadExcel = async (file) => {
   const formData = new FormData();
