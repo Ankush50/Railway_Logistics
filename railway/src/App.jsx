@@ -230,45 +230,7 @@ const ProfileModal = ({
                     <span className="text-sm font-medium">Edit</span>
                   </button>
                   
-                  <button
-                    onClick={() => {
-                      // Trigger file input for camera/upload
-                      const fileInput = document.createElement('input');
-                      fileInput.type = 'file';
-                      fileInput.accept = 'image/*';
-                      fileInput.capture = 'environment'; // Use back camera by default
-                      fileInput.onchange = async (e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          try {
-                            // Validate file type
-                            if (!file.type.startsWith('image/')) {
-                              alert('Please select an image file');
-                              return;
-                            }
 
-                            // Validate file size (5MB limit)
-                            if (file.size > 5 * 1024 * 1024) {
-                              alert('File size must be less than 5MB');
-                              return;
-                            }
-
-                            await uploadProfilePicture(file);
-                            refreshUserData();
-                          } catch (error) {
-                            console.error('Upload failed:', error);
-                            alert(error.message || 'Failed to upload profile picture. Please try again.');
-                          }
-                        }
-                      };
-                      fileInput.click();
-                    }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg transition-all duration-200 hover:scale-105"
-                    title="Take Photo"
-                  >
-                    <Camera className="h-5 w-5" />
-                    <span className="text-sm font-medium">Profile Picture</span>
-                  </button>
                 </div>
                 
                 <button
@@ -437,53 +399,12 @@ const ProfileModal = ({
                   )}
                 </button>
                 
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      // Trigger file input for camera/upload
-                      const fileInput = document.createElement('input');
-                      fileInput.type = 'file';
-                      fileInput.accept = 'image/*';
-                      fileInput.capture = 'environment'; // Use back camera by default
-                      fileInput.onchange = async (e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          try {
-                            // Validate file type
-                            if (!file.type.startsWith('image/')) {
-                              alert('Please select an image file');
-                              return;
-                            }
-
-                            // Validate file size (5MB limit)
-                            if (file.size > 5 * 1024 * 1024) {
-                              alert('File size must be less than 5MB');
-                              return;
-                            }
-
-                            await uploadProfilePicture(file);
-                            refreshUserData();
-                          } catch (error) {
-                            console.error('Upload failed:', error);
-                            alert(error.message || 'Failed to upload profile picture. Please try again.');
-                          }
-                        }
-                      };
-                      fileInput.click();
-                    }}
-                    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
-                  >
-                    <Camera className="h-5 w-5 mr-2" />
-                    Profile Picture
-                  </button>
-                  
-                  <button
-                    onClick={cancelProfileEdit}
-                    className="flex-1 bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
+                <button
+                  onClick={cancelProfileEdit}
+                  className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}

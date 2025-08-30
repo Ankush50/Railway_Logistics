@@ -48,6 +48,24 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     setShowUploadModal(false);
   };
 
+  const handleDirectUpload = async (file) => {
+    setIsUploading(true);
+    
+    try {
+      await uploadProfilePicture(file);
+      if (onUpdate) {
+        onUpdate();
+      }
+      // Show success message
+      alert('Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert(error.message || 'Failed to upload profile picture. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleCropComplete = async (croppedFile) => {
     setIsUploading(true);
     setShowCropper(false);
@@ -58,9 +76,11 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
       if (onUpdate) {
         onUpdate();
       }
+      // Show success message
+      alert('Profile picture updated successfully!');
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Failed to upload profile picture. Please try again.');
+      alert(error.message || 'Failed to upload profile picture. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -89,7 +109,9 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
 
   const getProfileImageUrl = () => {
     if (!user.profilePicture) return null;
-    return getProfilePictureUrl(user._id);
+    // Add timestamp to prevent caching issues
+    const baseUrl = getProfilePictureUrl(user._id);
+    return `${baseUrl}&t=${Date.now()}`;
   };
 
   return (

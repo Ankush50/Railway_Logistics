@@ -198,5 +198,7 @@ export const deleteProfilePicture = async () => {
 // Helper function to get profile picture URL
 export const getProfilePictureUrl = (userId = null) => {
   const baseUrl = API_URL.replace('/api', '');
-  return userId ? `${baseUrl}/api/profile/picture/${userId}` : `${baseUrl}/api/profile/picture`;
+  const url = userId ? `${baseUrl}/api/profile/picture/${userId}` : `${baseUrl}/api/profile/picture`;
+  // Add timestamp to prevent caching issues
+  return `${url}?t=${Date.now()}`;
 };

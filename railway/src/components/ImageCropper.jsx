@@ -7,6 +7,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [rotation, setRotation] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
 
@@ -15,10 +16,38 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setImageSrc(e.target.result);
+        setImageLoaded(false);
       };
       reader.readAsDataURL(imageFile);
     }
   }, [imageFile]);
+
+  const handleImageLoad = (e) => {
+    const img = e.target;
+    const canvas = canvasRef.current;
+    
+    if (canvas && img) {
+      // Calculate the scale to fit image in canvas
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const imgWidth = img.naturalWidth;
+      const imgHeight = img.naturalHeight;
+      
+      const scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+      const scaledWidth = imgWidth * scale;
+      const scaledHeight = imgHeight * scale;
+      
+      // Center the crop area
+      setCrop({
+        x: (canvasWidth - scaledWidth) / 2,
+        y: (canvasHeight - scaledHeight) / 2,
+        width: scaledWidth,
+        height: scaledHeight
+      });
+      
+      setImageLoaded(true);
+    }
+  };
 
   const handleMouseDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -60,9 +89,10 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   };
 
   const handleCrop = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!imageRef.current || !canvasRef.current) return;
+    
     const image = imageRef.current;
+    const canvas = canvasRef.current;
     
     // Create a new canvas for the cropped image
     const croppedCanvas = document.createElement('canvas');
@@ -72,13 +102,26 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
     croppedCanvas.width = crop.width;
     croppedCanvas.height = crop.height;
     
+    // Calculate the actual image coordinates based on scale
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const imgWidth = image.naturalWidth;
+    const imgHeight = image.naturalHeight;
+    const scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+    
+    // Calculate source coordinates in the original image
+    const sourceX = (crop.x - (canvasWidth - imgWidth * scale) / 2) / scale;
+    const sourceY = (crop.y - (canvasHeight - imgHeight * scale) / 2) / scale;
+    const sourceWidth = crop.width / scale;
+    const sourceHeight = crop.height / scale;
+    
     // Apply rotation and crop
     croppedCtx.save();
     croppedCtx.translate(crop.width / 2, crop.height / 2);
     croppedCtx.rotate((rotation * Math.PI) / 180);
     croppedCtx.drawImage(
       image,
-      crop.x, crop.y, crop.width, crop.height,
+      sourceX, sourceY, sourceWidth, sourceHeight,
       -crop.width / 2, -crop.height / 2, crop.width, crop.height
     );
     croppedCtx.restore();
@@ -178,37 +221,26 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
                   maxWidth: '100%',
                   height: 'auto'
                 }}
-                onLoad={(e) => {
-                  // Initialize crop to center of image
-                  const img = e.target;
-                  const canvas = canvasRef.current;
-                  const scale = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-                  const scaledWidth = img.naturalWidth * scale;
-                  const scaledHeight = img.naturalHeight * scale;
-                  
-                  setCrop({
-                    x: (canvas.width - scaledWidth) / 2,
-                    y: (canvas.height - scaledHeight) / 2,
-                    width: scaledWidth,
-                    height: scaledHeight
-                  });
-                }}
+                onLoad={handleImageLoad}
+                crossOrigin="anonymous"
               />
             </canvas>
             
-            {/* Crop overlay */}
-            <div
-              className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 pointer-events-none"
-              style={{
-                left: crop.x,
-                top: crop.y,
-                width: crop.width,
-                height: crop.height
-              }}
-            />
+            {/* Crop overlay - only show when image is loaded */}
+            {imageLoaded && (
+              <div
+                className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 pointer-events-none"
+                style={{
+                  left: crop.x,
+                  top: crop.y,
+                  width: crop.width,
+                  height: crop.height
+                }}
+              />
+            )}
             
-            {/* Resize handles */}
-            {['nw', 'ne', 'sw', 'se'].map((corner) => (
+            {/* Resize handles - only show when image is loaded */}
+            {imageLoaded && ['nw', 'ne', 'sw', 'se'].map((corner) => (
               <div
                 key={corner}
                 className="absolute w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-pointer"
@@ -251,7 +283,8 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
             </button>
             <button
               onClick={handleCrop}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center"
+              disabled={!imageLoaded}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="h-4 w-4 mr-2" />
               Apply Crop
