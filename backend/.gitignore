@@ -11,6 +11,12 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Uploads directory (contains user-uploaded files)
+uploads/
+uploads/*
+# But keep the placeholder file
+!uploads/profiles/.keep
+
 # Logs
 logs
 *.log
@@ -46,10 +52,6 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-# Uploads directory (for temporary files)
-uploads/*.xlsx
-uploads/*.xls
-
 # IDE files
 .vscode/
 .idea/
@@ -64,6 +66,3 @@ uploads/*.xls
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-seed.js
-env.example

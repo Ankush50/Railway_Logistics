@@ -7,11 +7,8 @@ const path = require('path');
 
 const router = express.Router();
 
-// Ensure uploads directory exists
+// Uploads directory is created at server startup
 const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
 
 // Set up multer for file upload
 const storage = multer.diskStorage({
@@ -39,7 +36,7 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 // Configurable file size limit, default 5MB
   }
 });
 

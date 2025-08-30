@@ -3,7 +3,7 @@ services:
     name: turbotransit-backend
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm ci --only=production
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -16,3 +16,9 @@ services:
         value: 7d
       - key: CORS_ORIGIN
         value: https://turbotransit1.netlify.app
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

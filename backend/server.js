@@ -27,13 +27,18 @@ const app = express();
 // Trust proxy for rate limiting (important for production deployments)
 app.set('trust proxy', 1);
 
-// Apply security middleware first
-app.use(securityMiddleware);
-app.use(securityLogger);
-app.use(blockSuspiciousUserAgents);
-app.use(validateOrigin);
-app.use(antiPhishingProtection);
-app.use(blockFileUploadAttacks);
+// Apply security middleware conditionally based on environment
+if (process.env.NODE_ENV === 'production') {
+  app.use(securityMiddleware);
+  app.use(securityLogger);
+  app.use(blockSuspiciousUserAgents);
+  app.use(validateOrigin);
+  app.use(antiPhishingProtection);
+  app.use(blockFileUploadAttacks);
+} else {
+  // Use only essential security in development
+  console.log('Running in development mode with basic security');
+}
 
 // Security middleware - Configure Helmet with balanced security
 app.use(helmet({
@@ -151,6 +156,54 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Create uploads directories once during startup
+const fs = require('fs');
+
+const createUploadDirectories = () => {
+  try {
+    const uploadsDir = path.join(__dirname, 'uploads');
+    const profilesDir = path.join(uploadsDir, 'profiles');
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    if (!fs.existsSync(profilesDir)) {
+      fs.mkdirSync(profilesDir, { recursive: true });
+    }
+    console.log('Upload directories created successfully');
+    
+    // Check if we need to create a placeholder file to prevent directory deletion
+    const placeholderFile = path.join(profilesDir, '.keep');
+    if (!fs.existsSync(placeholderFile)) {
+      fs.writeFileSync(placeholderFile, 'This file prevents the profiles directory from being deleted during deployment');
+      console.log('Placeholder file created in profiles directory');
+    }
+  } catch (error) {
+    console.error('Error creating upload directories:', error);
+  }
+};
+
+// Call this once during startup
+createUploadDirectories();
+
+// Check Cloudinary configuration
+const checkCloudinaryConfig = () => {
+  const hasCloudinary = process.env.CLOUDINARY_CLOUD_NAME && 
+                        process.env.CLOUDINARY_API_KEY && 
+                        process.env.CLOUDINARY_API_SECRET;
+  
+  if (hasCloudinary) {
+    console.log('✅ Cloudinary configured - Profile pictures will be stored in the cloud');
+  } else {
+    console.log('⚠️  Cloudinary not configured - Profile pictures will be stored locally (may be lost on deployment)');
+    console.log('   Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET for cloud storage');
+  }
+  
+  return hasCloudinary;
+};
+
+checkCloudinaryConfig();
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
@@ -168,91 +221,117 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Test uploads directory endpoint
-app.get('/test-uploads', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
+// Configuration test endpoint
+app.get('/api/config/test', (req, res) => {
+  const config = {
+    environment: process.env.NODE_ENV || 'development',
+    cloudinary: {
+      configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME ? '***' + process.env.CLOUDINARY_CLOUD_NAME.slice(-4) : null,
+      hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+      hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
+    },
+    database: {
+      connected: mongoose.connection.readyState === 1,
+      readyState: mongoose.connection.readyState
+    },
+    uploads: {
+      maxFileSize: process.env.MAX_FILE_SIZE || '5MB',
+      directory: path.join(__dirname, 'uploads')
+    }
+  };
   
+  res.status(200).json(config);
+});
+
+// Profile picture validation endpoint
+app.get('/api/debug/profile-pictures', async (req, res) => {
   try {
+    const fs = require('fs');
+    const path = require('path');
+    const User = require('./models/User');
+    
     const uploadsDir = path.join(__dirname, 'uploads');
     const profilesDir = path.join(uploadsDir, 'profiles');
     
-    // Check if directories exist
+    // Check directory status
     const uploadsExists = fs.existsSync(uploadsDir);
     const profilesExists = fs.existsSync(profilesDir);
     
-    // Try to create directories if they don't exist
-    if (!uploadsExists) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    if (!profilesExists) {
-      fs.mkdirSync(profilesDir, { recursive: true });
-    }
-    
     // List files in profiles directory
     let profileFiles = [];
-    if (fs.existsSync(profilesDir)) {
+    if (profilesExists) {
       profileFiles = fs.readdirSync(profilesDir);
     }
     
+    // Get users with profile pictures
+    const usersWithPictures = await User.find({ profilePicture: { $exists: true, $ne: null } })
+      .select('_id name email profilePicture')
+      .limit(10);
+    
+    // Check if profile picture files exist for users
+    const profilePictureStatus = usersWithPictures.map(user => {
+      let fileExists = false;
+      let filePath = null;
+      let storageType = 'unknown';
+      
+      if (user.profilePicture && user.profilePicture.includes('cloudinary.com')) {
+        // Cloudinary URL
+        fileExists = true;
+        storageType = 'cloudinary';
+        filePath = user.profilePicture;
+      } else if (user.profilePicture) {
+        // Local file
+        filePath = path.join(profilesDir, user.profilePicture);
+        fileExists = fs.existsSync(filePath);
+        storageType = 'local';
+      }
+      
+      return {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        profilePicture: user.profilePicture,
+        fileExists,
+        path: filePath,
+        storageType
+      };
+    });
+    
     res.status(200).json({
       status: 'OK',
-      uploadsDir: uploadsDir,
-      profilesDir: profilesDir,
-      uploadsExists: uploadsExists,
-      profilesExists: profilesExists,
-      profileFiles: profileFiles,
-      canWrite: true
+      directories: {
+        uploads: uploadsExists,
+        profiles: profilesExists,
+        uploadsPath: uploadsDir,
+        profilesPath: profilesDir
+      },
+      files: {
+        total: profileFiles.length,
+        list: profileFiles
+      },
+      users: {
+        total: usersWithPictures.length,
+        status: profilePictureStatus
+      },
+      cloudinary: {
+        configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+      }
     });
   } catch (error) {
     res.status(500).json({
       status: 'ERROR',
-      error: error.message,
-      uploadsDir: path.join(__dirname, 'uploads'),
-      profilesDir: path.join(__dirname, 'uploads', 'profiles')
+      error: error.message
     });
   }
 });
 
-// Test profile picture endpoint
-app.get('/test-profile-picture/:userId', async (req, res) => {
-  try {
-    const User = require('./models/User');
-    const user = await User.findById(req.params.userId).select('profilePicture');
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json({
-      userId: user._id,
-      profilePicture: user.profilePicture,
-      hasProfilePicture: !!user.profilePicture
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Test endpoints removed for production optimization
+// These endpoints were causing file operations during startup
 
-// Test image serving endpoint
-app.get('/test-image/:filename', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  const filename = req.params.filename;
-  const imagePath = path.join(__dirname, 'uploads', 'profiles', filename);
-  
-  if (fs.existsSync(imagePath)) {
-    res.set({
-      'Content-Type': 'image/jpeg',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    });
-    res.sendFile(imagePath);
-  } else {
-    res.status(404).json({ error: 'Image not found', path: imagePath });
-  }
-});
+// Test profile picture endpoint removed for production optimization
+
+// Test image serving endpoint removed for production optimization
 
 // 404 handler - More informative
 app.use('*', (req, res) => {
@@ -264,10 +343,14 @@ app.use('*', (req, res) => {
     method: req.method,
     availableRoutes: [
       '/health',
+      '/api/config/test',
+      '/api/debug/profile-pictures',
       '/api/auth/*',
       '/api/services/*',
       '/api/bookings/*',
-      '/api/upload/*'
+      '/api/upload/*',
+      '/api/profile/*',
+      '/api/notifications/*'
     ]
   });
 });

@@ -9,6 +9,8 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
   const [rotation, setRotation] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
+  const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
   const containerRef = useRef(null);
@@ -81,6 +83,8 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
         y >= crop.y && y <= crop.y + crop.height) {
       setIsDragging(true);
       setDragStart({ x: x - crop.x, y: y - crop.y });
+      setTouchStart({ x: touch.clientX, y: touch.clientY });
+      setLastTouch({ x: touch.clientX, y: touch.clientY });
     }
   };
 
@@ -108,18 +112,29 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
     
     const rect = containerRef.current.getBoundingClientRect();
     const touch = e.touches[0];
-    const x = touch.clientX - rect.left - dragStart.x;
-    const y = touch.clientY - rect.top - dragStart.y;
     
-    // Constrain crop area within container bounds
-    const maxX = rect.width - crop.width;
-    const maxY = rect.height - crop.height;
+    // Calculate the delta from the last touch position
+    const deltaX = touch.clientX - lastTouch.x;
+    const deltaY = touch.clientY - lastTouch.y;
     
-    setCrop(prev => ({
-      ...prev,
-      x: Math.max(0, Math.min(x, maxX)),
-      y: Math.max(0, Math.min(y, maxY))
-    }));
+    // Update crop position based on touch delta
+    setCrop(prev => {
+      const newX = prev.x + deltaX;
+      const newY = prev.y + deltaY;
+      
+      // Constrain crop area within container bounds
+      const maxX = rect.width - prev.width;
+      const maxY = rect.height - prev.height;
+      
+      return {
+        ...prev,
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      };
+    });
+    
+    // Update last touch position
+    setLastTouch({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleMouseUp = () => {
@@ -249,7 +264,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
           
           <div 
             ref={containerRef}
-            className="relative overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100"
+            className="relative overflow-hidden rounded-lg border-2 border-gray-300 bg-gray-100 touch-none"
             style={{ width: '400px', height: '400px' }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -264,7 +279,6 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
               src={imageSrc}
               alt="Crop preview"
               style={{
-                transform: `rotate(${rotation}deg)`,
                 maxWidth: '100%',
                 maxHeight: '100%',
                 width: 'auto',
@@ -276,6 +290,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
               }}
               onLoad={handleImageLoad}
               crossOrigin="anonymous"
+              draggable={false}
             />
             
             {/* Crop overlay - only show when image is loaded */}
@@ -295,7 +310,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
             {imageLoaded && ['nw', 'ne', 'sw', 'se'].map((corner) => (
               <div
                 key={corner}
-                className="absolute w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-pointer"
+                className="absolute w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-pointer touch-none"
                 style={{
                   left: corner.includes('w') ? crop.x - 8 : crop.x + crop.width - 8,
                   top: corner.includes('n') ? crop.y - 8 : crop.y + crop.height - 8

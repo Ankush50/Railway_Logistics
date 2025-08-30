@@ -10,38 +10,57 @@ const {
   deleteProfilePicture 
 } = require('../controllers/profileController');
 
+// Import Cloudinary storage
+const { profilePictureStorage, isCloudinaryConfigured } = require('../config/cloudinary');
+
 // Configure multer for profile picture uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/profiles/';
-    // Ensure directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+let upload;
+
+if (profilePictureStorage) {
+  // Use Cloudinary storage if configured
+  upload = multer({ 
+    storage: profilePictureStorage,
+    fileFilter: (req, file, cb) => {
+      // Accept only image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    },
+    limits: {
+      fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 // Configurable file size limit, default 5MB
     }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+  }).single('profilePicture');
+} else {
+  // Fallback to local storage
+  const localStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = 'uploads/profiles/';
+      // Directory is created at startup, no need to check/create here
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
 
-const fileFilter = (req, file, cb) => {
-  // Accept only image files
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-}).single('profilePicture');
+  upload = multer({ 
+    storage: localStorage,
+    fileFilter: (req, file, cb) => {
+      // Accept only image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    },
+    limits: {
+      fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 // Configurable file size limit, default 5MB
+    }
+  }).single('profilePicture');
+}
 
 // Error handling middleware for multer
 const handleUpload = (req, res, next) => {
@@ -49,6 +68,7 @@ const handleUpload = (req, res, next) => {
     method: req.method,
     url: req.url,
     hasFile: !!req.file,
+    storageType: isCloudinaryConfigured() ? 'cloudinary' : 'local',
     headers: req.headers
   });
   
@@ -78,7 +98,9 @@ const handleUpload = (req, res, next) => {
       filename: req.file?.filename,
       originalname: req.file?.originalname,
       mimetype: req.file?.mimetype,
-      size: req.file?.size
+      size: req.file?.size,
+      url: req.file?.path, // Cloudinary URL or local path
+      storageType: isCloudinaryConfigured() ? 'cloudinary' : 'local'
     });
     
     next();
