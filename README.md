@@ -53,7 +53,11 @@ A comprehensive web-based logistics management system designed to streamline rai
 - [x] **Backup & Recovery** - Automated data backup systems
 - [x] **Data Export** - Export functionality for reports
 
+<<<<<<< HEAD
+## 🏗️ Technology Stack
+=======
 ## 🏗️ Architecture
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 ### Frontend
 - **React 18** - Modern React with hooks and functional components
@@ -67,6 +71,16 @@ A comprehensive web-based logistics management system designed to streamline rai
 - **MongoDB** - NoSQL database with Mongoose ODM
 - **JWT Authentication** - Secure token-based authentication
 
+<<<<<<< HEAD
+### Storage & Deployment
+- **Cloud Storage** - Cloudinary for profile pictures
+- **Local Storage** - Fallback local file storage
+- **Database** - MongoDB Atlas cloud database
+- **Frontend Hosting** - Netlify
+- **Backend Hosting** - Render
+
+## 🔒 Security Features
+=======
 ### Storage
 - **Cloud Storage** - Cloudinary for profile pictures
 - **Local Storage** - Fallback local file storage
@@ -224,6 +238,7 @@ npm run preview
 - Auto-scaling capabilities
 
 ## 🔒 Security Checklist
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 - [x] **Authentication** - JWT-based secure authentication
 - [x] **Authorization** - Role-based access control
@@ -245,6 +260,23 @@ npm run preview
 - [x] **Database Indexing** - Optimized database queries
 - [x] **API Rate Limiting** - Performance protection
 
+<<<<<<< HEAD
+## 📱 Mobile Features
+
+### Touch Support
+- **Gesture Recognition** - Swipe and pinch gestures
+- **Touch Cropping** - Finger-based image cropping
+- **Responsive Design** - Optimized for all screen sizes
+- **PWA Support** - Installable as mobile app
+
+### Performance
+- **Lazy Loading** - Images and components load on demand
+- **Caching** - Intelligent browser caching
+- **Optimization** - Automatic image optimization
+- **CDN** - Content delivery network integration
+
+=======
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 ## 🌐 Browser Support
 
 - **Chrome** 90+
@@ -255,6 +287,37 @@ npm run preview
 
 ## 🤝 Contributing
 
+<<<<<<< HEAD
+We welcome contributions from the community! Please follow these guidelines:
+
+### Before Contributing
+1. **Check existing issues** - Look for open issues or feature requests
+2. **Discuss changes** - Open a discussion for major changes
+3. **Follow coding standards** - Maintain consistent code style
+
+### Contribution Process
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Make your changes** - Follow the existing code patterns
+4. **Test thoroughly** - Ensure your changes work correctly
+5. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+6. **Push to the branch** (`git push origin feature/AmazingFeature`)
+7. **Open a Pull Request** - Provide clear description of changes
+
+### Code Standards
+- **JavaScript/React** - Use modern ES6+ syntax
+- **CSS** - Follow Tailwind CSS conventions
+- **Naming** - Use descriptive variable and function names
+- **Comments** - Add comments for complex logic
+- **Testing** - Include tests for new features
+
+### What We're Looking For
+- **Bug fixes** - Help improve stability
+- **Performance improvements** - Optimize existing features
+- **New features** - Add value to the system
+- **Documentation** - Improve code clarity
+- **Testing** - Enhance test coverage
+=======
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -271,6 +334,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues** - Report bugs via GitHub Issues
 - **Discussions** - Join community discussions
 - **Email** - Contact the development team
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 
 ## 🗺️ Roadmap
 
@@ -292,8 +356,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Blockchain verification
 - [ ] Advanced reporting
 
+<<<<<<< HEAD
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues** - Report bugs via GitHub Issues
+- **Discussions** - Join community discussions
+- **Pull Requests** - Submit improvements and features
+
+=======
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
 ---
 
 **Built with ❤️ for the Railway Logistics Industry**
 
+<<<<<<< HEAD
+*Last updated: August 2025*
+=======
 *Last updated: December 2024*
+>>>>>>> 342d3b079e9c19fa69b28c04b659719c6c18ca76
