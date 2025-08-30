@@ -182,7 +182,7 @@ const ProfileModal = ({
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
                   <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
@@ -190,7 +190,7 @@ const ProfileModal = ({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
                   <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
@@ -468,7 +468,16 @@ function App() {
     }
   }, []);
 
-
+  // Periodic refresh of user data to ensure changes are reflected across devices
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      const interval = setInterval(() => {
+        refreshUserData();
+      }, 30000); // Refresh every 30 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, currentUser]);
 
   // Load services and bookings when authenticated
   useEffect(() => {
@@ -482,9 +491,16 @@ function App() {
     try {
       setLoading(true);
       const userData = await getMe();
+      console.log('Auth check - User data loaded:', userData);
       setCurrentUser(userData);
       setIsAuthenticated(true);
       setCurrentView("search");
+      
+      // Force a refresh after a short delay to ensure profile pictures are loaded
+      setTimeout(() => {
+        refreshUserData();
+      }, 1000);
+      
     } catch (error) {
       console.error("Auth check failed:", error);
       localStorage.removeItem("token");
@@ -515,6 +531,12 @@ function App() {
     try {
       setLoading(true);
       const list = currentUser?.role === 'admin' ? await getAllBookings() : await getUserBookings();
+      console.log('Loaded bookings with user data:', list.map(booking => ({
+        id: booking._id,
+        userId: booking.userId,
+        hasProfilePicture: !!booking.userId?.profilePicture,
+        profilePicture: booking.userId?.profilePicture
+      })));
       setBookings(list);
       setError(''); // Clear any error messages
       setSuccess(''); // Clear any success messages
@@ -548,9 +570,20 @@ function App() {
   const refreshUserData = async () => {
     try {
       console.log('Refreshing user data...');
+      
+      // Force a complete refresh by clearing any cached data
       const userData = await getMe();
       console.log('Refreshed user data:', userData);
+      
+      // Update the current user state
       setCurrentUser(userData);
+      
+      // Force re-render of all components that use user data
+      // This ensures profile pictures are updated everywhere
+      setTimeout(() => {
+        setCurrentUser({ ...userData });
+      }, 100);
+      
     } catch (error) {
       console.error('Failed to refresh user data:', error);
     }
@@ -1848,13 +1881,23 @@ function App() {
                   {/* User Details Section - Now shows below for better mobile experience */}
                   {currentUser?.role === 'admin' && expandedUserForBookingId === booking._id && (
                     <div className={`mt-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
-                      <div className="flex items-center mb-3">
+                      <div className="flex items-center mb-4">
                         <ProfilePicture 
                           user={booking.userId} 
                           isDark={isDark} 
-                          size="sm"
+                          size="md"
                         />
-                        <h5 className={`text-base sm:text-lg font-semibold ml-2 sm:ml-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
+                        <div className="ml-3">
+                          <h5 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
+                          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {booking.userId?.name || 'N/A'}
+                            {booking.userId?.profilePicture && (
+                              <span className={`ml-2 px-2 py-1 rounded-full text-xs ${isDark ? 'bg-green-900/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
+                                Has Profile Picture
+                              </span>
+                            )}
+                          </p>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
@@ -1877,8 +1920,8 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Status Chain - Show for all bookings */}
-                  <div className="mt-4">
+                  {/* Status Chain - Show only on desktop */}
+                  <div className="mt-4 hidden lg:block">
                     <StatusChain 
                       currentStatus={booking.status} 
                       isDark={isDark} 

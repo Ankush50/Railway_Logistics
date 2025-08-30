@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { User, Camera, X, Loader2, Upload } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
 import ImageCropper from './ImageCropper';
@@ -9,8 +9,22 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [lastProfilePicture, setLastProfilePicture] = useState(user?.profilePicture);
+  const [retryCount, setRetryCount] = useState(0);
   
   const fileInputRef = useRef(null);
+
+  // Check for profile picture changes
+  useEffect(() => {
+    if (user?.profilePicture !== lastProfilePicture) {
+      console.log('Profile picture changed:', {
+        old: lastProfilePicture,
+        new: user?.profilePicture
+      });
+      setLastProfilePicture(user?.profilePicture);
+      setRetryCount(0); // Reset retry count when profile picture changes
+    }
+  }, [user?.profilePicture, lastProfilePicture]);
 
   const sizeClasses = {
     sm: 'w-8 h-8',
@@ -127,11 +141,24 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
       console.log('No profile picture for user:', user);
       return null;
     }
+    
     // Add timestamp to prevent caching issues
     const baseUrl = getProfilePictureUrl(user._id);
     console.log('Profile picture URL:', baseUrl);
     console.log('User data:', user);
-    return `${baseUrl}?t=${Date.now()}`;
+    
+    // Add multiple cache-busting parameters
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(7);
+    const version = user.profilePicture.split('-')[1] || user.profilePicture; // Use filename timestamp if available
+    return `${baseUrl}?t=${timestamp}&r=${random}&v=${version}`;
+  };
+
+  // Force refresh function
+  const forceRefresh = () => {
+    if (onUpdate) {
+      onUpdate();
+    }
   };
 
   return (
@@ -156,8 +183,23 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
                 if (userIcon) {
                   userIcon.style.display = 'flex';
                 }
+                
+                // Retry logic - try up to 3 times
+                if (retryCount < 3) {
+                  setTimeout(() => {
+                    setRetryCount(prev => prev + 1);
+                    e.target.style.display = 'block';
+                    e.target.src = getProfileImageUrl(); // Force reload with new cache-busting params
+                  }, 1000 * (retryCount + 1)); // Exponential backoff
+                } else {
+                  // Try to refresh user data in case the profile picture was updated
+                  if (onUpdate) {
+                    setTimeout(() => onUpdate(), 1000);
+                  }
+                }
               }}
               onLoad={(e) => {
+                console.log('Profile picture loaded successfully');
                 // Hide fallback icon when image loads successfully
                 const userIcon = e.target.nextSibling;
                 if (userIcon) {

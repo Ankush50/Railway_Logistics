@@ -69,6 +69,21 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
     }
   };
 
+  const handleTouchStart = (e) => {
+    e.preventDefault(); // Prevent default touch behavior
+    const rect = containerRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    // Check if touch is within crop area
+    if (x >= crop.x && x <= crop.x + crop.width && 
+        y >= crop.y && y <= crop.y + crop.height) {
+      setIsDragging(true);
+      setDragStart({ x: x - crop.x, y: y - crop.y });
+    }
+  };
+
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     
@@ -87,7 +102,31 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
     }));
   };
 
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault(); // Prevent default touch behavior
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left - dragStart.x;
+    const y = touch.clientY - rect.top - dragStart.y;
+    
+    // Constrain crop area within container bounds
+    const maxX = rect.width - crop.width;
+    const maxY = rect.height - crop.height;
+    
+    setCrop(prev => ({
+      ...prev,
+      x: Math.max(0, Math.min(x, maxX)),
+      y: Math.max(0, Math.min(y, maxY))
+    }));
+  };
+
   const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
@@ -216,6 +255,9 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             <img
               ref={imageRef}
@@ -277,6 +319,30 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
                   
                   document.addEventListener('mousemove', handleMouseMove);
                   document.addEventListener('mouseup', handleMouseUp);
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const touch = e.touches[0];
+                  const startX = touch.clientX;
+                  const startY = touch.clientY;
+                  
+                  const handleTouchMove = (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - startX;
+                    const deltaY = touch.clientY - startY;
+                    const delta = Math.max(deltaX, deltaY);
+                    handleResize(corner, delta);
+                  };
+                  
+                  const handleTouchEnd = () => {
+                    document.removeEventListener('touchmove', handleTouchMove);
+                    document.removeEventListener('touchend', handleTouchEnd);
+                  };
+                  
+                  document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                  document.addEventListener('touchend', handleTouchEnd);
                 }}
               />
             ))}

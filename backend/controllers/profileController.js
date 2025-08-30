@@ -100,7 +100,8 @@ exports.getProfilePicture = async (req, res, next) => {
       userId: userId,
       params: req.params,
       hasUser: !!req.user,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
+      cacheControl: req.headers['cache-control']
     });
     
     if (!userId) {
@@ -133,13 +134,24 @@ exports.getProfilePicture = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Profile picture file not found' });
     }
 
-    // Set proper headers for image serving
+    // Get file stats for better caching
+    const stats = fs.statSync(picturePath);
+    const etag = `"${stats.size}-${stats.mtime.getTime()}"`;
+    
+    // Check if client has cached version
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end();
+    }
+
+    // Set proper headers for image serving with aggressive cache busting
     res.set({
       'Content-Type': 'image/jpeg',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Cache-Control': 'no-cache, no-store, must-revalidate, private',
       'Pragma': 'no-cache',
       'Expires': '0',
-      'X-Content-Type-Options': 'nosniff'
+      'X-Content-Type-Options': 'nosniff',
+      'ETag': etag,
+      'Last-Modified': stats.mtime.toUTCString()
     });
 
     console.log('Sending file:', picturePath);

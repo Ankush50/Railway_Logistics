@@ -44,7 +44,7 @@ exports.createBooking = async (req, res, next) => {
 // Get user bookings
 exports.getUserBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({ userId: req.user.id }).populate('serviceId');
+    const bookings = await Booking.find({ userId: req.user.id }).populate('serviceId').populate('userId', 'name username email phone role profilePicture');
     res.status(200).json({ success: true, data: bookings });
   } catch (err) {
     next(err);
@@ -54,7 +54,7 @@ exports.getUserBookings = async (req, res, next) => {
 // Admin: get all bookings with user details
 exports.getAllBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email phone role');
+    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email phone role profilePicture');
     res.status(200).json({ success: true, data: bookings });
   } catch (err) {
     next(err);
