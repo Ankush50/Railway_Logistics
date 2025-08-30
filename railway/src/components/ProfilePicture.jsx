@@ -1,16 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { User, Camera, X, Loader2 } from 'lucide-react';
+import { User, Camera, X, Loader2, Upload } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
 
-const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md' }) => {
+const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploadButton = false }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   
-  // Debug modal state
-  React.useEffect(() => {
-    console.log('Upload modal state:', showUploadModal);
-  }, [showUploadModal]);
   const fileInputRef = useRef(null);
 
   const sizeClasses = {
@@ -28,7 +24,6 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md' }) => {
   };
 
   const handleFileSelect = async (event) => {
-    console.log('File selected:', event.target.files[0]);
     const file = event.target.files[0];
     if (!file) return;
 
@@ -110,26 +105,25 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md' }) => {
           } ${user.profilePicture ? 'hidden' : ''}`} />
         </div>
 
-        {/* Upload/Change Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-          <button
-            onClick={() => {
-              console.log('Opening upload modal');
-              setShowUploadModal(true);
-            }}
-            className={`p-1 rounded-full ${
-              isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
-            } transition-colors`}
-            title="Change profile picture"
-          >
-            <Camera className={`${iconSizes[size === 'xl' ? 'lg' : 'md']} ${
-              isDark ? 'text-gray-300' : 'text-gray-600'
-            }`} />
-          </button>
-        </div>
+        {/* Upload/Change Overlay - Only show if showUploadButton is true */}
+        {showUploadButton && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className={`p-1 rounded-full ${
+                isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'
+              } transition-colors`}
+              title="Change profile picture"
+            >
+              <Camera className={`${iconSizes[size === 'xl' ? 'lg' : 'md']} ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`} />
+            </button>
+          </div>
+        )}
 
-        {/* Delete Button (if picture exists) */}
-        {user.profilePicture && (
+        {/* Delete Button (if picture exists and showUploadButton is true) */}
+        {user.profilePicture && showUploadButton && (
           <button
             onClick={handleDeletePicture}
             disabled={isDeleting}
@@ -154,13 +148,13 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md' }) => {
             isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
           }`}>
             <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Upload Profile Picture - DEBUG: Modal is open</h3>
+              <h3 className="text-lg font-semibold mb-4">Upload Profile Picture</h3>
               
               <div className="space-y-4">
                 <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
                   isDark ? 'border-gray-600' : 'border-gray-300'
                 }`}>
-                  <Camera className={`mx-auto mb-2 ${iconSizes.lg} ${
+                  <Upload className={`mx-auto mb-2 ${iconSizes.lg} ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`} />
                   <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>

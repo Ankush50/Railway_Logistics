@@ -31,6 +31,7 @@ import {
   Tag,
   Phone,
   Mail,
+  Camera,
   MapPin as LocationIcon,
 } from "lucide-react";
 import {
@@ -52,6 +53,7 @@ import {
   uploadExcel,
   updateProfile,
   changePassword,
+  uploadProfilePicture,
 } from "./api";
 
 // Theme Context
@@ -167,8 +169,9 @@ const ProfileModal = ({
                   <ProfilePicture 
                     user={currentUser} 
                     isDark={isDark} 
-                    onUpdate={refreshUserData}
+                    onUpdate={() => refreshUserData()}
                     size="md"
+                    showUploadButton={true}
                   />
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
@@ -216,14 +219,44 @@ const ProfileModal = ({
               </div>
 
               <div className="pt-4 flex items-center justify-between">
-                <button
-                  onClick={startProfileEdit}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg transition-all duration-200 hover:scale-105"
-                  title="Edit Profile"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span className="text-sm font-medium">Edit</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={startProfileEdit}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Edit Profile"
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span className="text-sm font-medium">Edit</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Trigger file input for camera/upload
+                      const fileInput = document.createElement('input');
+                      fileInput.type = 'file';
+                      fileInput.accept = 'image/*';
+                      fileInput.capture = 'environment'; // Use back camera by default
+                      fileInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          try {
+                            await uploadProfilePicture(file);
+                            refreshUserData();
+                          } catch (error) {
+                            console.error('Upload failed:', error);
+                            alert('Failed to upload profile picture. Please try again.');
+                          }
+                        }
+                      };
+                      fileInput.click();
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Take Photo"
+                  >
+                    <Camera className="h-5 w-5" />
+                    <span className="text-sm font-medium">Camera</span>
+                  </button>
+                </div>
                 
                 <button
                   onClick={() => { setShowProfileModal(false); handleLogout(); }}
@@ -243,8 +276,9 @@ const ProfileModal = ({
                   <ProfilePicture 
                     user={currentUser} 
                     isDark={isDark} 
-                    onUpdate={refreshUserData}
+                    onUpdate={() => refreshUserData()}
                     size="md"
+                    showUploadButton={true}
                   />
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
@@ -389,12 +423,42 @@ const ProfileModal = ({
                     </>
                   )}
                 </button>
-                <button
-                  onClick={cancelProfileEdit}
-                  className="w-full bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      // Trigger file input for camera/upload
+                      const fileInput = document.createElement('input');
+                      fileInput.type = 'file';
+                      fileInput.accept = 'image/*';
+                      fileInput.capture = 'environment'; // Use back camera by default
+                      fileInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          try {
+                            await uploadProfilePicture(file);
+                            refreshUserData();
+                          } catch (error) {
+                            console.error('Upload failed:', error);
+                            alert('Failed to upload profile picture. Please try again.');
+                          }
+                        }
+                      };
+                      fileInput.click();
+                    }}
+                    className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    <Camera className="h-5 w-5 mr-2" />
+                    Take Photo
+                  </button>
+                  
+                  <button
+                    onClick={cancelProfileEdit}
+                    className="flex-1 bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2169,7 +2233,7 @@ function App() {
               <ProfilePicture 
                 user={currentUser} 
                 isDark={isDark} 
-                onUpdate={refreshUserData}
+                onUpdate={() => refreshUserData()}
                 size="sm"
               />
               <span className="hidden sm:block text-sm font-medium">{currentUser.name}</span>
