@@ -2,12 +2,38 @@ const User = require('../models/User');
 const fs = require('fs');
 const path = require('path');
 
+// Ensure uploads directory exists
+const ensureUploadsDir = () => {
+  const uploadsDir = path.join(__dirname, '..', 'uploads');
+  const profilesDir = path.join(uploadsDir, 'profiles');
+  
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!fs.existsSync(profilesDir)) {
+    fs.mkdirSync(profilesDir, { recursive: true });
+  }
+};
+
 // Upload profile picture
 exports.uploadProfilePicture = async (req, res, next) => {
   try {
+    console.log('Upload request received:', {
+      file: req.file ? {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : 'No file',
+      user: req.user ? req.user.id : 'No user'
+    });
+
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
+
+    // Ensure uploads directory exists
+    ensureUploadsDir();
 
     const userId = req.user.id;
     const user = await User.findById(userId);
@@ -28,12 +54,15 @@ exports.uploadProfilePicture = async (req, res, next) => {
     user.profilePicture = req.file.filename;
     await user.save();
 
+    console.log('Profile picture uploaded successfully:', req.file.filename);
+
     res.status(200).json({ 
       success: true, 
       data: { profilePicture: req.file.filename },
       message: 'Profile picture updated successfully' 
     });
   } catch (err) {
+    console.error('Upload error:', err);
     next(err);
   }
 };

@@ -254,7 +254,7 @@ const ProfileModal = ({
                     title="Take Photo"
                   >
                     <Camera className="h-5 w-5" />
-                    <span className="text-sm font-medium">Camera</span>
+                    <span className="text-sm font-medium">Profile Picture</span>
                   </button>
                 </div>
                 
@@ -449,7 +449,7 @@ const ProfileModal = ({
                     className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
                   >
                     <Camera className="h-5 w-5 mr-2" />
-                    Take Photo
+                    Profile Picture
                   </button>
                   
                   <button

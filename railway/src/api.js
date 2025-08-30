@@ -137,15 +137,36 @@ export const uploadExcel = async (file) => {
 
 // Profile Picture API
 export const uploadProfilePicture = async (file) => {
-  const formData = new FormData();
-  formData.append('profilePicture', file);
-  
-  const response = await axios.post(`${API_URL}/profile/upload-picture`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
-  return response.data;
+  try {
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    
+    console.log('Uploading to:', `${API_URL}/profile/upload-picture`);
+    console.log('File:', file.name, file.size, file.type);
+    
+    const response = await axios.post(`${API_URL}/profile/upload-picture`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 30000 // 30 second timeout
+    });
+    
+    console.log('Upload response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Upload error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      }
+    });
+    throw error;
+  }
 };
 
 export const getProfilePicture = async (userId = null) => {

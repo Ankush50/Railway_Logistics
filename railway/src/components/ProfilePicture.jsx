@@ -1,11 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { User, Camera, X, Loader2, Upload } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
+import ImageCropper from './ImageCropper';
 
 const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploadButton = false }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   
   const fileInputRef = useRef(null);
 
@@ -39,10 +42,19 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
       return;
     }
 
+    // Show cropper instead of uploading directly
+    setSelectedFile(file);
+    setShowCropper(true);
+    setShowUploadModal(false);
+  };
+
+  const handleCropComplete = async (croppedFile) => {
     setIsUploading(true);
+    setShowCropper(false);
+    setSelectedFile(null);
+    
     try {
-      await uploadProfilePicture(file);
-      setShowUploadModal(false);
+      await uploadProfilePicture(croppedFile);
       if (onUpdate) {
         onUpdate();
       }
@@ -204,6 +216,19 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Cropper */}
+      {showCropper && selectedFile && (
+        <ImageCropper
+          imageFile={selectedFile}
+          onCrop={handleCropComplete}
+          onCancel={() => {
+            setShowCropper(false);
+            setSelectedFile(null);
+          }}
+          isDark={isDark}
+        />
       )}
     </>
   );
