@@ -1,0 +1,98 @@
+const User = require('../models/User');
+const fs = require('fs');
+const path = require('path');
+
+// Upload profile picture
+exports.uploadProfilePicture = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Delete old profile picture if exists
+    if (user.profilePicture) {
+      const oldPicturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
+      if (fs.existsSync(oldPicturePath)) {
+        fs.unlinkSync(oldPicturePath);
+      }
+    }
+
+    // Save new profile picture filename
+    user.profilePicture = req.file.filename;
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      data: { profilePicture: req.file.filename },
+      message: 'Profile picture updated successfully' 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get profile picture
+exports.getProfilePicture = async (req, res, next) => {
+  try {
+    const userId = req.params.userId || req.user.id;
+    const user = await User.findById(userId).select('profilePicture');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!user.profilePicture) {
+      return res.status(404).json({ success: false, message: 'No profile picture found' });
+    }
+
+    const picturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
+    
+    if (!fs.existsSync(picturePath)) {
+      return res.status(404).json({ success: false, message: 'Profile picture file not found' });
+    }
+
+    res.sendFile(picturePath);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete profile picture
+exports.deleteProfilePicture = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!user.profilePicture) {
+      return res.status(400).json({ success: false, message: 'No profile picture to delete' });
+    }
+
+    // Delete file from filesystem
+    const picturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
+    if (fs.existsSync(picturePath)) {
+      fs.unlinkSync(picturePath);
+    }
+
+    // Remove from database
+    user.profilePicture = null;
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Profile picture deleted successfully' 
+    });
+  } catch (err) {
+    next(err);
+  }
+};

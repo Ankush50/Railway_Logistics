@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import StatusChain from "./components/StatusChain";
 import BookingDetailsModal from "./components/BookingDetailsModal";
+import ProfilePicture from "./components/ProfilePicture";
 import {
   Search,
   Upload,
@@ -162,9 +163,12 @@ const ProfileModal = ({
             <div className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
+                  <ProfilePicture 
+                    user={currentUser} 
+                    isDark={isDark} 
+                    onUpdate={refreshUserData}
+                    size="md"
+                  />
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
@@ -235,9 +239,12 @@ const ProfileModal = ({
             <div className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 dark:bg-blue-800 w-12 h-12 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
+                  <ProfilePicture 
+                    user={currentUser} 
+                    isDark={isDark} 
+                    onUpdate={refreshUserData}
+                    size="md"
+                  />
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Update your information</p>
@@ -524,6 +531,15 @@ function App() {
   const handleStatusUpdateFromChain = async (newStatus) => {
     if (selectedBooking) {
       await handleStatusUpdate(selectedBooking._id, newStatus);
+    }
+  };
+
+  const refreshUserData = async () => {
+    try {
+      const userData = await getMe();
+      setCurrentUser(userData);
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
     }
   };
 
@@ -1820,10 +1836,12 @@ function App() {
                   {currentUser?.role === 'admin' && expandedUserForBookingId === booking._id && (
                     <div className={`mt-4 p-3 sm:p-4 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
                       <div className="flex items-center mb-3">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mr-2 sm:mr-3 ${isDark ? 'bg-gray-500' : 'bg-white'}`}>
-                          <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                        <h5 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
+                        <ProfilePicture 
+                          user={booking.userId} 
+                          isDark={isDark} 
+                          size="sm"
+                        />
+                        <h5 className={`text-base sm:text-lg font-semibold ml-2 sm:ml-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>User Details</h5>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} rounded-lg p-2 sm:p-3 border ${isDark ? 'border-gray-500' : 'border-gray-200'} min-w-0`}>
@@ -2147,9 +2165,12 @@ function App() {
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-white" />
-              </div>
+              <ProfilePicture 
+                user={currentUser} 
+                isDark={isDark} 
+                onUpdate={refreshUserData}
+                size="sm"
+              />
               <span className="hidden sm:block text-sm font-medium">{currentUser.name}</span>
               {currentUser.role === "admin" && (
                 <span className="hidden sm:block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">

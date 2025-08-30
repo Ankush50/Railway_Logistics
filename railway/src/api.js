@@ -134,3 +134,33 @@ export const uploadExcel = async (file) => {
   });
   return response.data;
 };
+
+// Profile Picture API
+export const uploadProfilePicture = async (file) => {
+  const formData = new FormData();
+  formData.append('profilePicture', file);
+  
+  const response = await axios.post(`${API_URL}/profile/upload-picture`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
+export const getProfilePicture = async (userId = null) => {
+  const url = userId ? `${API_URL}/profile/picture/${userId}` : `${API_URL}/profile/picture`;
+  const response = await axios.get(url);
+  return response.data;
+};
+
+export const deleteProfilePicture = async () => {
+  const response = await axios.delete(`${API_URL}/profile/picture`);
+  return response.data;
+};
+
+// Helper function to get profile picture URL
+export const getProfilePictureUrl = (userId = null) => {
+  const baseUrl = API_URL.replace('/api', '');
+  return userId ? `${baseUrl}/api/profile/picture/${userId}` : `${baseUrl}/api/profile/picture`;
+};

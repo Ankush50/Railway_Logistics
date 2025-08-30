@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Calendar, MapPin, Package, DollarSign, User, Clock } from 'lucide-react';
 import StatusChain from './StatusChain';
+import ProfilePicture from './ProfilePicture';
 
 const BookingDetailsModal = ({ booking, isOpen, onClose, isDark, currentUser, onStatusUpdate }) => {
   if (!isOpen || !booking) return null;
@@ -104,7 +105,11 @@ const BookingDetailsModal = ({ booking, isOpen, onClose, isDark, currentUser, on
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <User className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <ProfilePicture 
+                    user={booking.userId} 
+                    isDark={isDark} 
+                    size="sm"
+                  />
                   <div>
                     <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Customer</p>
                     <p className="font-medium">{booking.userId?.name || 'N/A'}</p>
