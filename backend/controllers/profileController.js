@@ -42,17 +42,28 @@ exports.uploadProfilePicture = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    console.log('User before update:', {
+      id: user._id,
+      profilePicture: user.profilePicture
+    });
+
     // Delete old profile picture if exists
     if (user.profilePicture) {
       const oldPicturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
       if (fs.existsSync(oldPicturePath)) {
         fs.unlinkSync(oldPicturePath);
+        console.log('Deleted old profile picture:', oldPicturePath);
       }
     }
 
     // Save new profile picture filename
     user.profilePicture = req.file.filename;
     await user.save();
+
+    console.log('User after update:', {
+      id: user._id,
+      profilePicture: user.profilePicture
+    });
 
     console.log('Profile picture uploaded successfully:', req.file.filename);
 
@@ -82,8 +93,27 @@ exports.uploadProfilePicture = async (req, res, next) => {
 // Get profile picture
 exports.getProfilePicture = async (req, res, next) => {
   try {
-    const userId = req.params.userId || req.user.id;
+    // If userId is provided in params, use it; otherwise use authenticated user's ID
+    const userId = req.params.userId || (req.user ? req.user.id : null);
+    
+    console.log('Profile picture request:', {
+      userId: userId,
+      params: req.params,
+      hasUser: !!req.user,
+      userAgent: req.headers['user-agent']
+    });
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+    
     const user = await User.findById(userId).select('profilePicture');
+    
+    console.log('User found:', {
+      userId: userId,
+      hasProfilePicture: !!user?.profilePicture,
+      profilePicture: user?.profilePicture
+    });
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -94,6 +124,9 @@ exports.getProfilePicture = async (req, res, next) => {
     }
 
     const picturePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profilePicture);
+    
+    console.log('Picture path:', picturePath);
+    console.log('File exists:', fs.existsSync(picturePath));
     
     if (!fs.existsSync(picturePath)) {
       console.error('Profile picture file not found:', picturePath);
@@ -109,6 +142,7 @@ exports.getProfilePicture = async (req, res, next) => {
       'X-Content-Type-Options': 'nosniff'
     });
 
+    console.log('Sending file:', picturePath);
     res.sendFile(picturePath);
   } catch (err) {
     console.error('Error serving profile picture:', err);

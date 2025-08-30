@@ -547,7 +547,9 @@ function App() {
 
   const refreshUserData = async () => {
     try {
+      console.log('Refreshing user data...');
       const userData = await getMe();
+      console.log('Refreshed user data:', userData);
       setCurrentUser(userData);
     } catch (error) {
       console.error('Failed to refresh user data:', error);

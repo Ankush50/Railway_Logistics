@@ -187,12 +187,19 @@ app.get('/test-uploads', (req, res) => {
       fs.mkdirSync(profilesDir, { recursive: true });
     }
     
+    // List files in profiles directory
+    let profileFiles = [];
+    if (fs.existsSync(profilesDir)) {
+      profileFiles = fs.readdirSync(profilesDir);
+    }
+    
     res.status(200).json({
       status: 'OK',
       uploadsDir: uploadsDir,
       profilesDir: profilesDir,
       uploadsExists: uploadsExists,
       profilesExists: profilesExists,
+      profileFiles: profileFiles,
       canWrite: true
     });
   } catch (error) {
@@ -202,6 +209,46 @@ app.get('/test-uploads', (req, res) => {
       uploadsDir: path.join(__dirname, 'uploads'),
       profilesDir: path.join(__dirname, 'uploads', 'profiles')
     });
+  }
+});
+
+// Test profile picture endpoint
+app.get('/test-profile-picture/:userId', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const user = await User.findById(req.params.userId).select('profilePicture');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({
+      userId: user._id,
+      profilePicture: user.profilePicture,
+      hasProfilePicture: !!user.profilePicture
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test image serving endpoint
+app.get('/test-image/:filename', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const filename = req.params.filename;
+  const imagePath = path.join(__dirname, 'uploads', 'profiles', filename);
+  
+  if (fs.existsSync(imagePath)) {
+    res.set({
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    res.sendFile(imagePath);
+  } else {
+    res.status(404).json({ error: 'Image not found', path: imagePath });
   }
 });
 

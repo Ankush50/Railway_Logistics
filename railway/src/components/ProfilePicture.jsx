@@ -53,6 +53,13 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     
     try {
       const response = await uploadProfilePicture(file);
+      console.log('Direct upload response:', response);
+      
+      // If the response includes updated user data, we should update the user context
+      if (response.data && response.data.user) {
+        console.log('Updating user data with:', response.data.user);
+      }
+      
       if (onUpdate) {
         onUpdate();
       }
@@ -73,6 +80,13 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
     
     try {
       const response = await uploadProfilePicture(croppedFile);
+      console.log('Upload response:', response);
+      
+      // If the response includes updated user data, we should update the user context
+      if (response.data && response.data.user) {
+        console.log('Updating user data with:', response.data.user);
+      }
+      
       if (onUpdate) {
         onUpdate();
       }
@@ -109,11 +123,15 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
   };
 
   const getProfileImageUrl = () => {
-    if (!user.profilePicture) return null;
+    if (!user.profilePicture) {
+      console.log('No profile picture for user:', user);
+      return null;
+    }
     // Add timestamp to prevent caching issues
     const baseUrl = getProfilePictureUrl(user._id);
     console.log('Profile picture URL:', baseUrl);
-    return `${baseUrl}&t=${Date.now()}`;
+    console.log('User data:', user);
+    return `${baseUrl}?t=${Date.now()}`;
   };
 
   return (

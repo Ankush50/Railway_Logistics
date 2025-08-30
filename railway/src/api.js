@@ -198,8 +198,16 @@ export const deleteProfilePicture = async () => {
 // Helper function to get profile picture URL
 export const getProfilePictureUrl = (userId = null) => {
   // For development, use localhost, for production use the actual domain
-  const baseUrl = API_URL.includes('localhost') ? 'http://localhost:5000' : API_URL.replace('/api', '');
+  let baseUrl;
+  if (API_URL.includes('localhost')) {
+    baseUrl = 'http://localhost:5000';
+  } else if (API_URL.includes('onrender.com')) {
+    baseUrl = 'https://turbotransit-backend.onrender.com';
+  } else {
+    baseUrl = API_URL.replace('/api', '');
+  }
+  
   const url = userId ? `${baseUrl}/api/profile/picture/${userId}` : `${baseUrl}/api/profile/picture`;
-  // Add timestamp to prevent caching issues
-  return `${url}?t=${Date.now()}`;
+  console.log('Constructed profile picture URL:', url);
+  return url;
 };

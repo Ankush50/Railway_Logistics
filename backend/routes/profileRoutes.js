@@ -45,6 +45,13 @@ const upload = multer({
 
 // Error handling middleware for multer
 const handleUpload = (req, res, next) => {
+  console.log('Upload middleware - Request received:', {
+    method: req.method,
+    url: req.url,
+    hasFile: !!req.file,
+    headers: req.headers
+  });
+  
   upload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       console.error('Multer error:', err);
@@ -65,13 +72,22 @@ const handleUpload = (req, res, next) => {
         message: 'File upload error: ' + err.message 
       });
     }
+    
+    console.log('Upload middleware - File processed:', {
+      hasFile: !!req.file,
+      filename: req.file?.filename,
+      originalname: req.file?.originalname,
+      mimetype: req.file?.mimetype,
+      size: req.file?.size
+    });
+    
     next();
   });
 };
 
 // Routes
 router.post('/upload-picture', protect, handleUpload, uploadProfilePicture);
-router.get('/picture/:userId?', protect, getProfilePicture);
+router.get('/picture/:userId?', getProfilePicture); // Remove protect for public access to profile pictures
 router.delete('/picture', protect, deleteProfilePicture);
 
 module.exports = router;
