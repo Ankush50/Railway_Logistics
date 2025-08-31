@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Turbo Transit</title>
+    <meta name="theme-color" content="#1e40af">
+    <meta name="description" content="You're currently offline. Check your connection and try again.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .offline-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .offline-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .train-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+         }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .retry-btn {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .retry-btn:hover {
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .retry-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .retry-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .retry-btn:hover::before {
+            left: 100%;
+        }
+
+        .features {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            text-align: left;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .feature-desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            top: 20%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            bottom: 15%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .train-icon {
+                font-size: 3rem;
+            }
+        }
+
+        .connection-status {
+            margin-top: 24px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="offline-container">
+        <span class="train-icon">🚂</span>
+        <h1>You're Offline</h1>
+        <p class="subtitle">
+            It looks like you've lost your connection to the internet. 
+            Don't worry, your data is safe and cached locally.
+        </p>
+
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            No Internet Connection
+        </div>
+
+        <button class="retry-btn" onclick="checkConnection()">
+            <span id="retry-text">Retry Connection</span>
+        </button>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-title">📱 Offline Access</div>
+                <div class="feature-desc">View cached data and previous searches</div>
+            </div>
+            <div class="feature">
+                <div class="feature-title">💾 Data Cached</div>
+                <div class="feature-desc">Your recent activities are saved locally</div>
+            </div>
+        </div>
+
+        <div class="connection-status">
+            <div id="status-text">Checking connection...</div>
+        </div>
+    </div>
+
+    <script>
+        let connectionCheckInterval;
+        let retryCount = 0;
+
+        // Check connection status
+        function checkConnection() {
+            const retryBtn = document.querySelector('.retry-btn');
+            const retryText = document.getElementById('retry-text');
+            const statusText = document.getElementById('status-text');
+            
+            retryBtn.disabled = true;
+            retryText.innerHTML = '<span class="spinner"></span>Checking...';
+            statusText.innerHTML = 'Testing connection...';
+
+            // Test connection by trying to fetch a small resource
+            fetch('/favicon2.ico', { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusText.innerHTML = '✅ Connection restored! Redirecting...';
+                    retryText.textContent = 'Success!';
+                    
+                    // Redirect to main app
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    throw new Error('Response not ok');
+                }
+            })
+            .catch(error => {
+                retryCount++;
+                statusText.innerHTML = `❌ Still offline (Attempt ${retryCount})`;
+                retryText.textContent = 'Retry Again';
+                retryBtn.disabled = false;
+                
+                // Show helpful message after multiple attempts
+                if (retryCount >= 3) {
+                    statusText.innerHTML = '💡 Try checking your WiFi or mobile data settings';
+                }
+            });
+        }
+
+        // Monitor connection status
+        function monitorConnection() {
+            if (navigator.onLine) {
+                document.getElementById('status-text').innerHTML = '✅ Connection detected!';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                document.getElementById('status-text').innerHTML = '📡 Waiting for connection...';
+            }
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            document.getElementById('status-text').innerHTML = '✅ You\'re back online! Redirecting...';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status-text').innerHTML = '📡 Connection lost';
+        });
+
+        // Start monitoring
+        monitorConnection();
+        connectionCheckInterval = setInterval(monitorConnection, 5000);
+
+        // Clean up interval when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (connectionCheckInterval) {
+                clearInterval(connectionCheckInterval);
+            }
+        });
+
+        // Check connection every 30 seconds
+        setInterval(() => {
+            if (navigator.onLine) {
+                fetch('/favicon2.ico', { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            document.getElementById('status-text').innerHTML = '✅ Connection verified';
+                        }
+                    })
+                    .catch(() => {
+                        // Connection test failed, but don't show error
+                    });
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

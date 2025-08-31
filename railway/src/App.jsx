@@ -3,6 +3,9 @@ import StatusChain from "./components/StatusChain";
 import BookingDetailsModal from "./components/BookingDetailsModal";
 import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import PWASettings from "./components/PWASettings";
+import usePWA from "./hooks/usePWA";
 import {
   Search,
   Upload,
@@ -231,6 +234,14 @@ const ProfileModal = ({
                     <span className="text-sm font-medium">Edit</span>
                   </button>
                   
+                  <button
+                    onClick={() => setShowPWASettings(true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="PWA Settings"
+                  >
+                    <Smartphone className="h-5 w-5" />
+                    <span className="text-sm font-medium">PWA</span>
+                  </button>
 
                 </div>
                 
@@ -424,6 +435,17 @@ function App() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // PWA functionality
+  const {
+    isOnline,
+    isInstalled,
+    hasUpdate,
+    updateServiceWorker,
+    requestNotificationPermission,
+    sendPushNotification,
+    isPWAReady
+  } = usePWA();
+
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -433,6 +455,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [showPWASettings, setShowPWASettings] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   // Booking UI states
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -2552,6 +2575,69 @@ function App() {
         currentUser={currentUser}
         onStatusUpdate={handleStatusUpdateFromChain}
       />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt isDark={isDark} />
+
+      {/* PWA Settings Modal */}
+      <PWASettings 
+        isDark={isDark}
+        isOpen={showPWASettings}
+        onClose={() => setShowPWASettings(false)}
+      />
+
+      {/* PWA Update Notification */}
+      {hasUpdate && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className={`rounded-2xl shadow-2xl border p-4 ${
+            isDark 
+              ? 'bg-green-800 border-green-600 text-white' 
+              : 'bg-green-100 border-green-400 text-green-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
+                  isDark ? 'bg-green-700' : 'bg-green-200'
+                }`}>
+                  <span className="text-lg">🔄</span>
+                </div>
+                <div>
+                  <p className="font-semibold">Update Available</p>
+                  <p className="text-sm opacity-90">New version ready to install</p>
+                </div>
+              </div>
+              <button
+                onClick={updateServiceWorker}
+                className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                  isDark 
+                    ? 'bg-green-700 hover:bg-green-600' 
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Offline Status Indicator */}
+      {!isOnline && (
+        <div className="fixed top-4 left-4 z-50">
+          <div className={`rounded-xl shadow-lg border px-4 py-2 ${
+            isDark 
+              ? 'bg-red-800 border-red-600 text-white' 
+              : 'bg-red-100 border-red-400 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              <div className={`w-3 h-3 rounded-full mr-2 ${
+                isDark ? 'bg-red-400' : 'bg-red-500'
+              } animate-pulse`}></div>
+              <span className="text-sm font-medium">Offline</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
