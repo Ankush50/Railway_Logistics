@@ -365,14 +365,15 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
                   }`}>
                     <p className="font-medium">Desktop Installation:</p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li><strong>Chrome/Edge:</strong> Look for the install icon (⊕) in the address bar</li>
-                      <li><strong>Firefox:</strong> Click the menu button (≡) and select "Install"</li>
+                      {/* <li><strong>Chrome/Edge/Brave:</strong> Look for the install icon (⊕) in the address bar</li> */}
+                      <li><strong>Chrome/Edge/Brave:</strong> Click on browser menu, then click on "Save and Share" and select "Install page as App"</li>
+                      <li><strong>Firefox:</strong> Click the menu button (≡) and select "Share -- Install"</li>
                       <li><strong>Safari:</strong> Go to File → Add to Dock</li>
                     </ul>
                     <p className="font-medium mt-3">Mobile Installation:</p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li><strong>Android:</strong> Tap "Add to Home Screen" when prompted</li>
-                      <li><strong>iOS:</strong> Tap the share button and select "Add to Home Screen"</li>
+                      <li><strong>Android:</strong> Tap "Add to Home Screen" when prompted or go to the browser menu and select "Add to Home Screen"</li>
+                      <li><strong>iOS:</strong> Tap the share button and select "Add to Home Screen" or go to the browser menu and select "Add to Home Screen"</li>
                     </ul>
                     <div className={`mt-3 p-2 rounded-lg ${
                       isDark ? 'bg-blue-800/30' : 'bg-blue-100'

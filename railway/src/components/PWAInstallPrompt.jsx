@@ -128,7 +128,7 @@ const PWAInstallPrompt = ({ isDark }) => {
     
     let instructions = '';
     if (isChrome || isEdge) {
-      instructions = 'Click the install icon (⊕) in the address bar, or go to Menu > Install Turbo Transit';
+      instructions = 'Click on browser menu, then click on "Save and Share" and select "Install page as App';
     } else if (isFirefox) {
       instructions = 'Click the menu button (≡) and select "Install"';
     } else {
