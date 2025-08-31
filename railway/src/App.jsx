@@ -36,6 +36,7 @@ import {
   Phone,
   Mail,
   Camera,
+  Smartphone,
   MapPin as LocationIcon,
 } from "lucide-react";
 import {
@@ -134,11 +135,12 @@ const ProfileModal = ({
   setProfileSuccess,
   handleProfileUpdate,
   refreshUserData,
+  setShowPWASettings,
 }) => {
-  if (!showProfileModal) return null;
+  if (!showProfileModal || !currentUser) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -179,8 +181,8 @@ const ProfileModal = ({
                     showUploadButton={true}
                   />
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser.username}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{currentUser?.name || 'N/A'}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{currentUser?.username || 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -1942,7 +1944,7 @@ function App() {
                       isAdmin={currentUser?.role === 'admin'}
                       onStatusUpdate={currentUser?.role === 'admin' ? 
                         (newStatus) => handleStatusUpdate(booking._id, newStatus) : 
-                        undefined
+                        null
                       }
                     />
                   </div>
@@ -2226,6 +2228,22 @@ function App() {
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
+            {/* PWA Install Button - Desktop */}
+            {isPWAReady && !isInstalled && (
+              <button
+                onClick={() => setShowPWASettings(true)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
+                  isDark 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800' 
+                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                }`}
+                title="Install Turbo Transit App"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:block">Install App</span>
+              </button>
+            )}
+
             {/* Notification Bell */}
             <NotificationBell isDark={isDark} />
 
@@ -2244,7 +2262,7 @@ function App() {
                 onUpdate={() => refreshUserData()}
                 size="sm"
               />
-              <span className="hidden sm:block text-sm font-medium">{currentUser.name}</span>
+              <span className="hidden sm:block text-sm font-medium">{currentUser?.name || 'User'}</span>
               {currentUser.role === "admin" && (
                 <span className="hidden sm:block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
                   Admin
@@ -2342,6 +2360,7 @@ function App() {
         setProfileSuccess={setProfileSuccess}
         handleProfileUpdate={handleProfileUpdate}
         refreshUserData={refreshUserData}
+        setShowPWASettings={setShowPWASettings}
       />
 
       {/* Booking Modal */}
