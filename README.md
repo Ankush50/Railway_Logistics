@@ -31,7 +31,9 @@ A comprehensive web-based logistics management system designed to streamline rai
 - [x] **Dark/Light Theme** - User preference theme switching
 - [x] **Image Cropping** - Advanced profile picture cropping with touch support
 - [x] **Real-time Updates** - Live data updates and notifications
-- [x] **Progressive Web App** - PWA capabilities for mobile users
+- [x] **Progressive Web App** - Full PWA capabilities for mobile and desktop
+- [x] **Desktop Installation** - Native app-like experience on desktop browsers
+- [x] **Offline Support** - Complete offline functionality with smart caching
 
 ### 🔔 Notification System
 - [x] **Real-time Notifications** - Instant booking and status updates
@@ -125,13 +127,35 @@ A comprehensive web-based logistics management system designed to streamline rai
 ## Overview
 Turbo Transit has been enhanced with comprehensive Progressive Web App (PWA) capabilities, allowing users to install the app on their devices and enjoy a native app-like experience.
 
+## 🆕 Recent PWA Improvements (December 2024)
+
+### Desktop Installation Enhancements
+- **Fixed Desktop Install Button**: Resolved issues preventing the install button from appearing in browser address bars
+- **Enhanced Install Prompt**: Improved automatic installation prompts with better user guidance
+- **Manual Install Instructions**: Added comprehensive fallback instructions for all major browsers
+- **Header Install Button**: Added prominent install button in the main interface for easy access
+
+### Technical Fixes
+- **Icon Resolution**: Fixed missing PWA icons that were preventing proper installation
+- **Manifest Optimization**: Updated manifest.json with proper icon references and desktop compatibility
+- **Service Worker Improvements**: Enhanced error handling and permission management
+- **Console Error Resolution**: Eliminated PWA-related console errors and warnings
+
+### User Experience Improvements
+- **Better Error Handling**: Graceful fallbacks when automatic installation isn't available
+- **Clear Instructions**: Step-by-step installation guides for different browsers and devices
+- **Installation Detection**: Improved detection of app installation status across platforms
+- **PWA Settings Enhancement**: Added detailed installation instructions in the PWA settings modal
+
 ## 🚀 Key PWA Features
 
 ### 1. **Installable App**
 - **Home Screen Installation**: Users can add the app to their phone's home screen
-- **Desktop Installation**: Available for installation on desktop browsers
+- **Desktop Installation**: Available for installation on desktop browsers (Chrome, Edge, Firefox)
 - **Smart Install Prompt**: Contextual installation prompts with benefits explanation
 - **Installation Detection**: Automatically detects if app is already installed
+- **Manual Install Support**: Fallback instructions for browsers without automatic prompts
+- **Header Install Button**: Quick access install button in the main interface
 
 ### 2. **Offline Functionality**
 - **Service Worker**: Handles offline caching and background sync
@@ -180,10 +204,15 @@ Turbo Transit has been enhanced with comprehensive Progressive Web App (PWA) cap
 1. **Chrome/Edge**:
    - Look for the install icon (⊕) in the address bar
    - Click to install the app
+   - Or use the "Install App" button in the header
 
 2. **Firefox**:
    - Click the menu (☰) → "Install App"
    - Confirm installation
+
+3. **Safari**:
+   - Go to File → Add to Dock
+   - The app will appear in your dock
 
 ## ⚙️ PWA Settings
 
@@ -271,16 +300,26 @@ Access PWA settings through the Profile Modal → PWA button:
    - Ensure HTTPS is enabled
    - Check if app is already installed
    - Verify service worker is registered
+   - Try the "Install App" button in the header
+   - Check PWA Settings for manual install instructions
 
-2. **Offline Functionality Not Working**
+2. **Desktop Install Button Missing**
+   - Make sure you're using Chrome, Edge, or Firefox
+   - Visit the site multiple times to meet install criteria
+   - Check that the service worker is active
+   - Clear browser cache and reload
+
+3. **Offline Functionality Not Working**
    - Clear browser cache
    - Check service worker registration
    - Verify offline page is cached
+   - Check PWA Settings for cache status
 
-3. **Notifications Not Working**
+4. **Notifications Not Working**
    - Check browser permissions
    - Ensure HTTPS connection
    - Verify service worker is active
+   - Test notifications in PWA Settings
 
 ### Debug Tools
 - **Chrome DevTools**: Application tab for PWA debugging
@@ -390,6 +429,9 @@ We welcome contributions from the community! Please follow these guidelines:
 - [x] User authentication
 - [x] Service management
 - [x] Mobile responsiveness
+- [x] Progressive Web App (PWA)
+- [x] Desktop installation support
+- [x] Offline functionality
 
 ### Phase 2 (Planned)
 - [ ] Real-time tracking
@@ -417,4 +459,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for the Railway Logistics Industry**
 
-*Last updated: 30 August 2025*
+*Last updated: December 2024*

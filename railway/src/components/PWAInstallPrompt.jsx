@@ -6,6 +6,7 @@ const PWAInstallPrompt = ({ isDark }) => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installLoading, setInstallLoading] = useState(false);
+  const [showManualInstall, setShowManualInstall] = useState(false);
 
   useEffect(() => {
     // Check if app is already installed
@@ -27,7 +28,19 @@ const PWAInstallPrompt = ({ isDark }) => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      // Store globally for other components to use
+      window.deferredPrompt = e;
       setShowInstallPrompt(true);
+    };
+
+    // Check if we should show manual install instructions
+    const checkManualInstall = () => {
+      // Show manual install if no deferred prompt after 3 seconds and not installed
+      setTimeout(() => {
+        if (!deferredPrompt && !isInstalled && 'serviceWorker' in navigator) {
+          setShowManualInstall(true);
+        }
+      }, 3000);
     };
 
     // Listen for appinstalled event
@@ -35,22 +48,25 @@ const PWAInstallPrompt = ({ isDark }) => {
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
+      // Clear global reference
+      window.deferredPrompt = null;
       
-      // Show success message
-      if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
-        navigator.serviceWorker.ready.then(registration => {
-          registration.showNotification('Turbo Transit Installed! 🎉', {
-            body: 'Your railway logistics app is now installed and ready to use.',
-            icon: '/icon-192x192.png',
-            badge: '/icon-72x72.png',
-            tag: 'install-success'
+              // Show success message
+        if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Turbo Transit Installed! 🎉', {
+              body: 'Your railway logistics app is now installed and ready to use.',
+              icon: '/favicon2.ico',
+              badge: '/favicon2.ico',
+              tag: 'install-success'
+            });
           });
-        });
-      }
+        }
     };
 
     // Check if already installed
     checkIfInstalled();
+    checkManualInstall();
 
     // Add event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -91,13 +107,35 @@ const PWAInstallPrompt = ({ isDark }) => {
     } finally {
       setInstallLoading(false);
       setDeferredPrompt(null);
+      // Clear global reference
+      window.deferredPrompt = null;
     }
   };
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
+    setShowManualInstall(false);
     // Show again after 1 hour
     setTimeout(() => setShowInstallPrompt(true), 3600000);
+  };
+
+  const handleManualInstall = () => {
+    // For browsers that don't support beforeinstallprompt
+    // Show instructions for manual installation
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    const isEdge = /Edg/.test(navigator.userAgent);
+    const isFirefox = /Firefox/.test(navigator.userAgent);
+    
+    let instructions = '';
+    if (isChrome || isEdge) {
+      instructions = 'Click the install icon (⊕) in the address bar, or go to Menu > Install Turbo Transit';
+    } else if (isFirefox) {
+      instructions = 'Click the menu button (≡) and select "Install"';
+    } else {
+      instructions = 'Look for an install option in your browser menu or address bar';
+    }
+    
+    alert(`To install this app:\n\n${instructions}\n\nOr use your browser's "Add to Home Screen" option.`);
   };
 
   const handleLearnMore = () => {
@@ -105,8 +143,13 @@ const PWAInstallPrompt = ({ isDark }) => {
     window.open('https://web.dev/installable/', '_blank');
   };
 
-  // Don't show if already installed or no prompt available
-  if (isInstalled || !showInstallPrompt || !deferredPrompt) {
+  // Don't show if already installed
+  if (isInstalled) {
+    return null;
+  }
+
+  // Show manual install if no automatic prompt available
+  if (!showInstallPrompt && !showManualInstall) {
     return null;
   }
 
@@ -172,23 +215,33 @@ const PWAInstallPrompt = ({ isDark }) => {
 
           {/* Action buttons */}
           <div className="flex space-x-3">
-            <button
-              onClick={handleInstallClick}
-              disabled={installLoading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {installLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Installing...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Install App
-                </>
-              )}
-            </button>
+            {deferredPrompt ? (
+              <button
+                onClick={handleInstallClick}
+                disabled={installLoading}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {installLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Installing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Install App
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={handleManualInstall}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Install App
+              </button>
+            )}
             
             <button
               onClick={handleLearnMore}

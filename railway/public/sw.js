@@ -7,15 +7,7 @@ const STATIC_FILES = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon2.ico',
-  '/icon-72x72.png',
-  '/icon-96x96.png',
-  '/icon-128x128.png',
-  '/icon-144x144.png',
-  '/icon-152x152.png',
-  '/icon-192x192.png',
-  '/icon-384x384.png',
-  '/icon-512x512.png'
+  '/favicon2.ico'
 ];
 
 // API endpoints to cache
@@ -316,8 +308,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: event.data ? event.data.text() : 'New update available!',
-    icon: '/icon-192x192.png',
-    badge: '/icon-72x72.png',
+    icon: '/favicon2.ico',
+    badge: '/favicon2.ico',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -327,12 +319,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'View Details',
-        icon: '/icon-72x72.png'
+        icon: '/favicon2.ico'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/icon-72x72.png'
+        icon: '/favicon2.ico'
       }
     ]
   };
@@ -382,6 +374,8 @@ if ('periodicSync' in self.registration) {
       event.waitUntil(updateContent());
     }
   });
+} else {
+  console.log('Periodic sync not supported in this browser');
 }
 
 // Update content in background

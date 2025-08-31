@@ -2231,7 +2231,23 @@ function App() {
             {/* PWA Install Button - Desktop */}
             {isPWAReady && !isInstalled && (
               <button
-                onClick={() => setShowPWASettings(true)}
+                onClick={() => {
+                  // Try to trigger install prompt if available
+                  if (window.deferredPrompt) {
+                    window.deferredPrompt.prompt();
+                    window.deferredPrompt.userChoice.then((choiceResult) => {
+                      if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                      } else {
+                        console.log('User dismissed the install prompt');
+                      }
+                      window.deferredPrompt = null;
+                    });
+                  } else {
+                    // Fallback: show PWA settings for manual install instructions
+                    setShowPWASettings(true);
+                  }
+                }}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                   isDark 
                     ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800' 

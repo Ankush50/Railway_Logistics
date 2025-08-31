@@ -106,12 +106,12 @@ const usePWA = () => {
   const sendPushNotification = useCallback(async (title, options = {}) => {
     if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
       try {
-        const reg = await navigator.serviceWorker.ready;
-        await reg.showNotification(title, {
-          icon: '/icon-192x192.png',
-          badge: '/icon-72x72.png',
-          ...options
-        });
+              const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification(title, {
+        icon: '/favicon2.ico',
+        badge: '/favicon2.ico',
+        ...options
+      });
         return true;
       } catch (error) {
         console.error('Failed to send push notification:', error);
@@ -140,13 +140,21 @@ const usePWA = () => {
   const registerPeriodicSync = useCallback(async (tag = 'content-update') => {
     if ('serviceWorker' in navigator && 'periodicSync' in window.ServiceWorkerRegistration.prototype) {
       try {
+        // Check permission first
+        const permission = await navigator.permissions.query({ name: 'periodic-background-sync' });
+        if (permission.state !== 'granted') {
+          console.log('Periodic sync permission not granted');
+          return false;
+        }
+
         const reg = await navigator.serviceWorker.ready;
         await reg.periodicSync.register(tag, {
           minInterval: 24 * 60 * 60 * 1000 // 24 hours
         });
+        console.log('Periodic sync registered successfully');
         return true;
       } catch (error) {
-        console.error('Failed to register periodic sync:', error);
+        console.log('Failed to register periodic sync (this is normal for most browsers):', error.message);
         return false;
       }
     }

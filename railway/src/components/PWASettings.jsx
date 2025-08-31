@@ -348,6 +348,42 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
                   </button>
                 </div>
               )}
+
+              {/* Manual Install Instructions */}
+              {!isInstalled && (
+                <div className={`p-4 rounded-xl border ${
+                  isDark ? 'bg-blue-900/20 border-blue-600' : 'bg-blue-50 border-blue-400'
+                }`}>
+                  <h3 className={`font-semibold mb-3 flex items-center ${
+                    isDark ? 'text-blue-300' : 'text-blue-800'
+                  }`}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Install Instructions
+                  </h3>
+                  <div className={`text-sm space-y-2 ${
+                    isDark ? 'text-blue-200' : 'text-blue-700'
+                  }`}>
+                    <p className="font-medium">Desktop Installation:</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li><strong>Chrome/Edge:</strong> Look for the install icon (⊕) in the address bar</li>
+                      <li><strong>Firefox:</strong> Click the menu button (≡) and select "Install"</li>
+                      <li><strong>Safari:</strong> Go to File → Add to Dock</li>
+                    </ul>
+                    <p className="font-medium mt-3">Mobile Installation:</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li><strong>Android:</strong> Tap "Add to Home Screen" when prompted</li>
+                      <li><strong>iOS:</strong> Tap the share button and select "Add to Home Screen"</li>
+                    </ul>
+                    <div className={`mt-3 p-2 rounded-lg ${
+                      isDark ? 'bg-blue-800/30' : 'bg-blue-100'
+                    }`}>
+                      <p className="text-xs">
+                        💡 <strong>Tip:</strong> Make sure you're using a modern browser and have visited the site at least once before.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
