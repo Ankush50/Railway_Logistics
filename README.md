@@ -4,7 +4,7 @@ A comprehensive web-based logistics management system designed to streamline rai
 
 ## 🌟 Features
 
-## 🆕 Recent Improvements (December 2024)
+## 🆕 Recent Improvements (September 2025)
 
 ### 📦 Archive Management System
 - **Automatic Archiving**: Delivered and cancelled bookings are automatically archived
@@ -210,7 +210,7 @@ A comprehensive web-based logistics management system designed to streamline rai
 ## Overview
 Turbo Transit has been enhanced with comprehensive Progressive Web App (PWA) capabilities, allowing users to install the app on their devices and enjoy a native app-like experience.
 
-## 🆕 Recent PWA Improvements (December 2024)
+## 🆕 Recent PWA Improvements (September 2025)
 
 ### Desktop Installation Enhancements
 - **Fixed Desktop Install Button**: Resolved issues preventing the install button from appearing in browser address bars
