@@ -474,6 +474,7 @@ function App() {
   const [bookingDetailsModalOpen, setBookingDetailsModalOpen] = useState(false);
   const [showArchivedBookings, setShowArchivedBookings] = useState(false);
   const [bookingSortBy, setBookingSortBy] = useState('all');
+  const [bookingSearchId, setBookingSearchId] = useState('');
 
   // Profile editing state - using separate state variables for stability
   const [profileName, setProfileName] = useState("");
@@ -517,12 +518,12 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  // Reload bookings when archive view changes
+  // Reload bookings when view changes
   useEffect(() => {
-    if (isAuthenticated && currentUser?.role === 'admin') {
+    if (isAuthenticated) {
       loadBookings();
     }
-  }, [showArchivedBookings]);
+  }, [currentView]);
 
   const checkAuthStatus = async () => {
     try {
@@ -566,7 +567,20 @@ function App() {
   const loadBookings = async () => {
     try {
       setLoading(true);
-      const list = currentUser?.role === 'admin' ? await getAllBookings(showArchivedBookings) : await getUserBookings();
+      let list;
+      
+      if (currentUser?.role === 'admin') {
+        // For admin users, load based on current view
+        if (currentView === 'archived-bookings') {
+          list = await getAllBookings(true); // Load archived bookings
+        } else {
+          list = await getAllBookings(false); // Load active bookings
+        }
+      } else {
+        // For normal users, always load their active bookings
+        list = await getUserBookings();
+      }
+      
       setBookings(Array.isArray(list) ? list : []);
       setError(''); // Clear any error messages
       setSuccess(''); // Clear any success messages
@@ -632,6 +646,15 @@ function App() {
     
     let filtered = bookings;
     
+    // Filter by search ID if provided
+    if (bookingSearchId.trim()) {
+      filtered = filtered.filter(booking => 
+        booking && booking._id && 
+        booking._id.toLowerCase().includes(bookingSearchId.toLowerCase())
+      );
+    }
+    
+    // Filter by status
     if (bookingSortBy === 'cancelled') {
       filtered = filtered.filter(booking => booking && booking.status === 'Cancelled');
     } else if (bookingSortBy === 'delivered') {
@@ -1767,67 +1790,47 @@ function App() {
             </p>
           </div>
           
-          {/* Archive Controls - Only for Admin */}
+          {/* Controls - Only for Admin */}
           {currentUser?.role === 'admin' && (
-            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-2 border-blue-500 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => {
-                    console.log('Archive button clicked, current state:', showArchivedBookings);
-                    setShowArchivedBookings(!showArchivedBookings);
-                    setBookingSortBy('all');
-                  }}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 text-lg ${
-                    showArchivedBookings
-                      ? 'bg-orange-500 text-white hover:bg-orange-600'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                {/* Search by Booking ID */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by Booking ID..."
+                    className={`pl-10 pr-4 py-2 rounded-lg border transition-colors text-sm ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    value={bookingSearchId}
+                    onChange={(e) => setBookingSearchId(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
+                
+                {/* Sort Dropdown */}
+                <select
+                  value={bookingSortBy}
+                  onChange={(e) => setBookingSortBy(e.target.value)}
+                  className={`px-4 py-2 rounded-lg border transition-colors text-sm ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
                   }`}
                 >
-                  <Archive className="h-5 w-5" />
-                  {showArchivedBookings ? 'View Active Bookings' : 'View Archived Bookings'}
-                </button>
-                
-                {!showArchivedBookings && (
-                  <select
-                    value={bookingSortBy}
-                    onChange={(e) => {
-                      console.log('Sort changed to:', e.target.value);
-                      setBookingSortBy(e.target.value);
-                    }}
-                    className={`px-4 py-3 rounded-lg border-2 transition-colors text-lg font-medium ${
-                      isDark 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                  >
-                    <option value="all">All Bookings</option>
-                    <option value="cancelled">Cancelled Only</option>
-                    <option value="delivered">Delivered Only</option>
-                  </select>
-                )}
+                  <option value="all">All Bookings</option>
+                  <option value="cancelled">Cancelled Only</option>
+                  <option value="delivered">Delivered Only</option>
+                </select>
               </div>
               
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                {showArchivedBookings ? (
-                  <span className="text-orange-600 dark:text-orange-400 font-semibold">
-                    📁 Showing archived bookings ({getFilteredBookings().length} found)
-                  </span>
-                ) : (
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    📋 Showing {getFilteredBookings().length} active bookings
-                  </span>
-                )}
+                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                  📋 Showing {getFilteredBookings().length} active bookings
+                </span>
               </div>
-            </div>
-          )}
-          
-          {/* Debug Info - Only show for admin users */}
-          {currentUser?.role === 'admin' && (
-            <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                Debug: Current User Role = {currentUser?.role || 'undefined'}, 
-                Is Admin = {currentUser?.role === 'admin' ? 'Yes' : 'No'}
-              </p>
             </div>
           )}
           
@@ -2157,11 +2160,6 @@ function App() {
   // Archived Booking Interface
   const ArchivedBookingInterface = () => {
     const [expandedUserForBookingId, setExpandedUserForBookingId] = useState(null);
-    
-    // Force archived view
-    useEffect(() => {
-      setShowArchivedBookings(true);
-    }, []);
 
     // Check if user is admin
     if (currentUser?.role !== 'admin') {
@@ -2196,26 +2194,29 @@ function App() {
           </div>
           
           {/* Archive Controls */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-2 border-orange-500 p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => {
-                  setCurrentView("bookings");
-                  setShowArchivedBookings(false);
-                }}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 text-lg bg-blue-500 text-white hover:bg-blue-600"
-              >
-                <Eye className="h-5 w-5" />
-                View Active Bookings
-              </button>
+              {/* Search by Booking ID */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by Booking ID..."
+                  className={`pl-10 pr-4 py-2 rounded-lg border transition-colors text-sm ${
+                    isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                  value={bookingSearchId}
+                  onChange={(e) => setBookingSearchId(e.target.value)}
+                />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              </div>
               
+              {/* Sort Dropdown */}
               <select
                 value={bookingSortBy}
-                onChange={(e) => {
-                  console.log('Sort changed to:', e.target.value);
-                  setBookingSortBy(e.target.value);
-                }}
-                className={`px-4 py-3 rounded-lg border-2 transition-colors text-lg font-medium ${
+                onChange={(e) => setBookingSortBy(e.target.value)}
+                className={`px-4 py-2 rounded-lg border transition-colors text-sm ${
                   isDark 
                     ? 'bg-gray-700 border-gray-600 text-white' 
                     : 'bg-white border-gray-300 text-gray-900'
@@ -2429,6 +2430,7 @@ function App() {
                     setSidebarOpen(false);
                     setError(''); // Clear any error messages
                     setSuccess(''); // Clear any success messages
+                    setBookingSearchId(''); // Clear search when switching views
                     
                     // Handle archived bookings view
                     if (item.id === 'archived-bookings') {
