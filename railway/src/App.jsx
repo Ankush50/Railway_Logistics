@@ -1768,29 +1768,33 @@ function App() {
           </div>
           
           {/* Archive Controls - Only for Admin */}
-          {currentUser?.role === 'admin' && (
-            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          {currentUser && (
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-2 border-blue-500 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => {
+                    console.log('Archive button clicked, current state:', showArchivedBookings);
                     setShowArchivedBookings(!showArchivedBookings);
                     setBookingSortBy('all');
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 text-lg ${
                     showArchivedBookings
-                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
-                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                      ? 'bg-orange-500 text-white hover:bg-orange-600'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
                   }`}
                 >
-                  <Archive className="h-4 w-4" />
+                  <Archive className="h-5 w-5" />
                   {showArchivedBookings ? 'View Active Bookings' : 'View Archived Bookings'}
                 </button>
                 
                 {!showArchivedBookings && (
                   <select
                     value={bookingSortBy}
-                    onChange={(e) => setBookingSortBy(e.target.value)}
-                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                    onChange={(e) => {
+                      console.log('Sort changed to:', e.target.value);
+                      setBookingSortBy(e.target.value);
+                    }}
+                    className={`px-4 py-3 rounded-lg border-2 transition-colors text-lg font-medium ${
                       isDark 
                         ? 'bg-gray-700 border-gray-600 text-white' 
                         : 'bg-white border-gray-300 text-gray-900'
@@ -1804,10 +1808,31 @@ function App() {
               </div>
               
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                {showArchivedBookings ? 'Showing archived bookings' : `Showing ${getFilteredBookings().length} active bookings`}
+                {showArchivedBookings ? (
+                  <span className="text-orange-600 dark:text-orange-400 font-semibold">
+                    📁 Showing archived bookings ({getFilteredBookings().length} found)
+                  </span>
+                ) : (
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                    📋 Showing {getFilteredBookings().length} active bookings
+                  </span>
+                )}
               </div>
             </div>
           )}
+          
+          {/* Debug Info - Remove this after testing */}
+          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 rounded-lg">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              Debug: Current User Role = {currentUser?.role || 'undefined'}, 
+              Is Admin = {currentUser?.role === 'admin' ? 'Yes' : 'No'}
+            </p>
+            {currentUser?.role !== 'admin' && (
+              <p className="text-sm text-red-800 dark:text-red-200 mt-2">
+                ⚠️ Archive functionality is only available for admin users. Regular users cannot access archived bookings.
+              </p>
+            )}
+          </div>
           
           {loading ? (
             <div className="text-center py-12">
