@@ -1768,7 +1768,7 @@ function App() {
           </div>
           
           {/* Archive Controls - Only for Admin */}
-          {currentUser && (
+          {currentUser?.role === 'admin' && (
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-2 border-blue-500 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20">
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -1821,18 +1821,15 @@ function App() {
             </div>
           )}
           
-          {/* Debug Info - Remove this after testing */}
-          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 rounded-lg">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Debug: Current User Role = {currentUser?.role || 'undefined'}, 
-              Is Admin = {currentUser?.role === 'admin' ? 'Yes' : 'No'}
-            </p>
-            {currentUser?.role !== 'admin' && (
-              <p className="text-sm text-red-800 dark:text-red-200 mt-2">
-                ⚠️ Archive functionality is only available for admin users. Regular users cannot access archived bookings.
+          {/* Debug Info - Only show for admin users */}
+          {currentUser?.role === 'admin' && (
+            <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-400 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Debug: Current User Role = {currentUser?.role || 'undefined'}, 
+                Is Admin = {currentUser?.role === 'admin' ? 'Yes' : 'No'}
               </p>
-            )}
-          </div>
+            </div>
+          )}
           
           {loading ? (
             <div className="text-center py-12">
@@ -1845,7 +1842,10 @@ function App() {
                 <Package className="h-12 w-12 text-gray-400 dark:text-gray-500" />
               </div>
               <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
-                {showArchivedBookings ? 'No archived bookings found.' : 'No bookings found matching the current filter.'}
+                {currentUser?.role === 'admin' 
+                  ? (showArchivedBookings ? 'No archived bookings found.' : 'No bookings found matching the current filter.')
+                  : 'No bookings found. Start by searching for railway services and making a booking.'
+                }
               </p>
             </div>
           ) : (
@@ -2154,12 +2154,243 @@ function App() {
     );
   };
 
+  // Archived Booking Interface
+  const ArchivedBookingInterface = () => {
+    const [expandedUserForBookingId, setExpandedUserForBookingId] = useState(null);
+    
+    // Force archived view
+    useEffect(() => {
+      setShowArchivedBookings(true);
+    }, []);
+
+    // Check if user is admin
+    if (currentUser?.role !== 'admin') {
+      return (
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-8 rounded-lg text-center">
+            <Shield className="mx-auto h-16 w-16 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+            <p>You need administrator privileges to access archived bookings.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className={`rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 transition-colors duration-300 ${
+          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+        }`}>
+          <div className="mb-6 sm:mb-8">
+            <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold flex items-center mb-2 ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>
+              <div className="bg-orange-100 dark:bg-orange-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                <Archive className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              Archived Bookings
+            </h2>
+            <p className={`text-sm sm:text-base ${isDark ? 'text-gray-300' : 'text-gray-600'} ml-16 sm:ml-20`}>
+              View and manage archived railway logistics bookings
+            </p>
+          </div>
+          
+          {/* Archive Controls */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-2 border-orange-500 p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  setCurrentView("bookings");
+                  setShowArchivedBookings(false);
+                }}
+                className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 text-lg bg-blue-500 text-white hover:bg-blue-600"
+              >
+                <Eye className="h-5 w-5" />
+                View Active Bookings
+              </button>
+              
+              <select
+                value={bookingSortBy}
+                onChange={(e) => {
+                  console.log('Sort changed to:', e.target.value);
+                  setBookingSortBy(e.target.value);
+                }}
+                className={`px-4 py-3 rounded-lg border-2 transition-colors text-lg font-medium ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
+              >
+                <option value="all">All Archived</option>
+                <option value="cancelled">Cancelled Only</option>
+                <option value="delivered">Delivered Only</option>
+              </select>
+            </div>
+            
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-orange-600 dark:text-orange-400 font-semibold">
+                📁 Showing archived bookings ({getFilteredBookings().length} found)
+              </span>
+            </div>
+          </div>
+          
+          {loading ? (
+            <div className="text-center py-12">
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-orange-600 mb-4" />
+              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading archived bookings...</p>
+            </div>
+          ) : getFilteredBookings().length === 0 ? (
+            <div className="text-center py-12">
+              <div className="bg-gray-100 dark:bg-gray-700 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Archive className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+              </div>
+              <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+                No archived bookings found.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {getFilteredBookings().map((booking) => (
+                <div
+                  key={booking._id}
+                  className={`border rounded-xl p-4 sm:p-6 transition-all duration-200 hover:shadow-lg ${
+                    isDark 
+                      ? 'bg-gray-800 border-gray-500 opacity-75' 
+                      : 'bg-gray-100 border-gray-300 opacity-75'
+                  }`}
+                >
+                  <div className="mb-3 flex items-center gap-2">
+                    <Archive className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Archived</span>
+                  </div>
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+                    <div className="space-y-3 flex-1 min-w-0">
+                      <div className="mb-3">
+                        <h4 className={`text-lg sm:text-xl font-bold break-words ${
+                          isDark ? 'text-white' : 'text-gray-800'
+                        }`}>
+                          {booking.route || booking.serviceId?.route || 'Unknown Route'}
+                        </h4>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                          Booking ID: {booking._id ? booking._id.slice(-8) : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        {/* Quantity Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-gray-700/50 border border-gray-600 hover:bg-gray-600/50' 
+                            : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-blue-900/30' : 'bg-blue-100'
+                          }`}>
+                            <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Quantity</p>
+                            <p className={`text-sm sm:text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {booking.quantity || 0} tons
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Total Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-green-900/20 border border-green-700/30 hover:bg-green-900/30' 
+                            : 'bg-green-50 border border-green-200 hover:bg-green-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-green-900/30' : 'bg-green-100'
+                          }`}>
+                            <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Total</p>
+                            <p className={`text-sm sm:text-base font-bold truncate ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                              ₹{booking.total || 0}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Date Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-indigo-900/20 border border-indigo-700/30 hover:bg-indigo-900/30' 
+                            : 'bg-indigo-50 border border-indigo-200 hover:bg-indigo-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-indigo-900/30' : 'bg-indigo-100'
+                          }`}>
+                            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Booked On</p>
+                            <p className={`text-sm sm:text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0 w-full sm:w-auto">
+                      {/* Status Badge */}
+                      <span className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                        booking.status === 'Delivered'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          : booking.status === 'Cancelled'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      }`}>
+                        {booking.status}
+                      </span>
+                      
+                      {/* Action Buttons Row */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        {/* View Details Button */}
+                        <button
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setBookingDetailsModalOpen(true);
+                          }}
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                        >
+                          View Details
+                        </button>
+                        
+                        {/* Unarchive Button - Only for Admin */}
+                        {currentUser?.role === 'admin' && (
+                          <button
+                            onClick={() => handleArchiveToggle(booking._id, false)}
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            title="Unarchive booking"
+                          >
+                            <Archive className="h-4 w-4 inline mr-1" />
+                            Unarchive
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Sidebar Component
   const Sidebar = () => {
     const navItems = [
       { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
       { id: "bookings", label: currentUser?.role === 'admin' ? "User Bookings" : "My Bookings", icon: Eye, color: "text-green-600" },
-      ...(currentUser?.role === "admin" ? [{ id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }] : []),
+      ...(currentUser?.role === "admin" ? [
+        { id: "archived-bookings", label: "Archived Bookings", icon: Archive, color: "text-orange-600" },
+        { id: "admin", label: "Admin Panel", icon: Shield, color: "text-purple-600" }
+      ] : []),
     ];
 
     return (
@@ -2198,6 +2429,13 @@ function App() {
                     setSidebarOpen(false);
                     setError(''); // Clear any error messages
                     setSuccess(''); // Clear any success messages
+                    
+                    // Handle archived bookings view
+                    if (item.id === 'archived-bookings') {
+                      setShowArchivedBookings(true);
+                    } else if (item.id === 'bookings') {
+                      setShowArchivedBookings(false);
+                    }
                   }}
                   className={`w-full flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
                     currentView === item.id
@@ -2544,6 +2782,7 @@ function App() {
           {currentView === "search" && <SearchInterface />}
           {currentView === "admin" && <AdminPanel />}
           {currentView === "bookings" && <BookingInterface />}
+          {currentView === "archived-bookings" && <ArchivedBookingInterface />}
         </div>
       </main>
 

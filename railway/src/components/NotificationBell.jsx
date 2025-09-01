@@ -89,14 +89,27 @@ const NotificationBell = ({ isDark }) => {
       if (button) {
         const rect = button.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        const dropdownWidth = Math.min(320, viewportWidth - 32); // 320px or viewport width - 32px
+        const viewportHeight = window.innerHeight;
+        
+        // For mobile, use full width with padding
+        const isMobile = viewportWidth < 640; // sm breakpoint
+        const dropdownWidth = isMobile ? viewportWidth - 32 : Math.min(320, viewportWidth - 32);
         
         let right = '0';
-        if (rect.right + dropdownWidth > viewportWidth) {
-          right = `${viewportWidth - rect.right - dropdownWidth}px`;
+        let top = '100%';
+        
+        if (isMobile) {
+          // On mobile, position it as a modal-like overlay
+          right = '50%';
+          top = '50%';
+        } else {
+          // On desktop, position relative to button
+          if (rect.right + dropdownWidth > viewportWidth) {
+            right = `${viewportWidth - rect.right - dropdownWidth}px`;
+          }
         }
         
-        setDropdownPosition({ right, top: '100%' });
+        setDropdownPosition({ right, top });
       }
     }
     setShowDropdown(!showDropdown);
@@ -132,35 +145,48 @@ const NotificationBell = ({ isDark }) => {
           />
           
           {/* Dropdown */}
-          <div className={`absolute mt-2 w-80 sm:w-96 max-h-96 overflow-y-auto rounded-lg shadow-xl z-50 transform transition-all duration-200 ${
+          <div className={`fixed sm:absolute mt-2 w-[calc(100vw-2rem)] sm:w-80 lg:w-96 max-h-[calc(100vh-4rem)] sm:max-h-96 overflow-y-auto rounded-lg shadow-xl z-50 transform transition-all duration-200 ${
             isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
           }`} style={{
-            maxWidth: 'calc(100vw - 2rem)',
-            right: dropdownPosition.right,
-            top: dropdownPosition.top
+            right: window.innerWidth < 640 ? '1rem' : dropdownPosition.right,
+            top: window.innerWidth < 640 ? '2rem' : dropdownPosition.top,
+            transform: window.innerWidth < 640 ? 'translateX(50%)' : 'none'
           }}>
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-base sm:text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Notifications
                 </h3>
-                {unreadCount > 0 && (
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllAsRead}
+                      disabled={loading}
+                      className={`text-xs sm:text-sm px-2 py-1 rounded ${
+                        isDark 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      } disabled:opacity-50`}
+                    >
+                      {loading ? 'Marking...' : 'Mark all read'}
+                    </button>
+                  )}
+                  {/* Close button for mobile */}
                   <button
-                    onClick={handleMarkAllAsRead}
-                    disabled={loading}
-                    className={`text-sm px-2 py-1 rounded ${
+                    onClick={() => setShowDropdown(false)}
+                    className={`sm:hidden p-1 rounded-full ${
                       isDark 
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    } disabled:opacity-50`}
+                        ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                    }`}
                   >
-                    {loading ? 'Marking...' : 'Mark all read'}
+                    <X className="h-4 w-4" />
                   </button>
-                )}
+                </div>
               </div>
             </div>
 
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-[calc(100vh-8rem)] sm:max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="p-4 text-center">
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -171,21 +197,21 @@ const NotificationBell = ({ isDark }) => {
                 notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    className={`p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                    className={`p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                       !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                   >
-                    <div className="flex items-start space-x-3">
-                      <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                    <div className="flex items-start space-x-2 sm:space-x-3">
+                      <span className="text-base sm:text-lg flex-shrink-0">{getNotificationIcon(notification.type)}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
-                          <h4 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          <h4 className={`text-sm sm:text-base font-medium ${isDark ? 'text-white' : 'text-gray-900'} break-words`}>
                             {notification.title}
                           </h4>
                           {!notification.isRead && (
                             <button
                               onClick={() => handleMarkAsRead(notification._id)}
-                              className={`ml-2 p-1 rounded-full ${
+                              className={`ml-2 p-1 rounded-full flex-shrink-0 ${
                                 isDark 
                                   ? 'hover:bg-gray-600 text-gray-400 hover:text-white' 
                                   : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
@@ -195,7 +221,7 @@ const NotificationBell = ({ isDark }) => {
                             </button>
                           )}
                         </div>
-                        <p className={`text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-gray-300' : 'text-gray-600'} break-words`}>
                           {notification.message}
                         </p>
                         <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
