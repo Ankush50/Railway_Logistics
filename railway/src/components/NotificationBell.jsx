@@ -7,6 +7,7 @@ const NotificationBell = ({ isDark }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ right: '0', top: '100%' });
 
   const loadNotifications = async () => {
     try {
@@ -81,11 +82,32 @@ const NotificationBell = ({ isDark }) => {
     return date.toLocaleDateString();
   };
 
+  const handleToggleDropdown = () => {
+    if (!showDropdown) {
+      // Calculate position to ensure dropdown is visible on mobile
+      const button = document.querySelector('[data-notification-bell]');
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const dropdownWidth = Math.min(320, viewportWidth - 32); // 320px or viewport width - 32px
+        
+        let right = '0';
+        if (rect.right + dropdownWidth > viewportWidth) {
+          right = `${viewportWidth - rect.right - dropdownWidth}px`;
+        }
+        
+        setDropdownPosition({ right, top: '100%' });
+      }
+    }
+    setShowDropdown(!showDropdown);
+  };
+
   return (
     <div className="relative">
       {/* Notification Bell */}
       <button
-        onClick={() => setShowDropdown(!showDropdown)}
+        data-notification-bell
+        onClick={handleToggleDropdown}
         className={`relative p-2 rounded-lg transition-colors ${
           isDark 
             ? 'text-gray-300 hover:bg-gray-700' 
@@ -110,9 +132,13 @@ const NotificationBell = ({ isDark }) => {
           />
           
           {/* Dropdown */}
-          <div className={`absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg shadow-xl z-50 ${
+          <div className={`absolute mt-2 w-80 sm:w-96 max-h-96 overflow-y-auto rounded-lg shadow-xl z-50 transform transition-all duration-200 ${
             isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-          }`}>
+          }`} style={{
+            maxWidth: 'calc(100vw - 2rem)',
+            right: dropdownPosition.right,
+            top: dropdownPosition.top
+          }}>
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>

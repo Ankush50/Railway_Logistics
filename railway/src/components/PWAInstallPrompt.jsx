@@ -88,22 +88,30 @@ const PWAInstallPrompt = ({ isDark }) => {
     setInstallLoading(true);
     
     try {
-      // Show the install prompt
-      deferredPrompt.prompt();
-      
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-        setShowInstallPrompt(false);
+      // Ensure the prompt is visible and focused
+      if (deferredPrompt.prompt) {
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+          setShowInstallPrompt(false);
+        } else {
+          console.log('User dismissed the install prompt');
+          // Hide prompt for a while, then show again later
+          setTimeout(() => setShowInstallPrompt(true), 30000);
+        }
       } else {
-        console.log('User dismissed the install prompt');
-        // Hide prompt for a while, then show again later
-        setTimeout(() => setShowInstallPrompt(true), 30000);
+        // Fallback for browsers that don't support prompt method
+        handleManualInstall();
       }
     } catch (error) {
       console.error('Installation failed:', error);
+      // Fallback to manual install
+      handleManualInstall();
     } finally {
       setInstallLoading(false);
       setDeferredPrompt(null);
@@ -154,12 +162,20 @@ const PWAInstallPrompt = ({ isDark }) => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 max-w-sm mx-auto">
+    <div className="fixed bottom-4 left-4 right-4 z-[9999] max-w-sm mx-auto">
       <div className={`relative rounded-2xl shadow-2xl border transition-all duration-300 transform ${
         isDark 
           ? 'bg-gray-800 border-gray-700 text-white' 
           : 'bg-white border-gray-200 text-gray-900'
-      }`}>
+      }`} style={{
+        zIndex: 9999,
+        position: 'fixed',
+        bottom: '1rem',
+        left: '1rem',
+        right: '1rem',
+        maxWidth: 'calc(100vw - 2rem)',
+        margin: '0 auto'
+      }}>
         {/* Close button */}
         <button
           onClick={handleDismiss}

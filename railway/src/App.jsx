@@ -38,6 +38,7 @@ import {
   Camera,
   Smartphone,
   MapPin as LocationIcon,
+  Archive,
 } from "lucide-react";
 import {
   register,
@@ -54,6 +55,7 @@ import {
   getUserBookings,
   getAllBookings,
   updateBookingStatus,
+  toggleArchiveBooking,
   requestCancellation,
   uploadExcel,
   updateProfile,
@@ -470,6 +472,8 @@ function App() {
   const [cancellationLoading, setCancellationLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingDetailsModalOpen, setBookingDetailsModalOpen] = useState(false);
+  const [showArchivedBookings, setShowArchivedBookings] = useState(false);
+  const [bookingSortBy, setBookingSortBy] = useState('all');
 
   // Profile editing state - using separate state variables for stability
   const [profileName, setProfileName] = useState("");
@@ -513,6 +517,13 @@ function App() {
     }
   }, [isAuthenticated]);
 
+  // Reload bookings when archive view changes
+  useEffect(() => {
+    if (isAuthenticated && currentUser?.role === 'admin') {
+      loadBookings();
+    }
+  }, [showArchivedBookings]);
+
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
@@ -555,14 +566,15 @@ function App() {
   const loadBookings = async () => {
     try {
       setLoading(true);
-      const list = currentUser?.role === 'admin' ? await getAllBookings() : await getUserBookings();
-      setBookings(list);
+      const list = currentUser?.role === 'admin' ? await getAllBookings(showArchivedBookings) : await getUserBookings();
+      setBookings(Array.isArray(list) ? list : []);
       setError(''); // Clear any error messages
       setSuccess(''); // Clear any success messages
     } catch (error) {
       console.error("Failed to load bookings:", error);
       setSuccess(''); // Clear any previous success messages
-      setError("Failed to load bookings");
+      setError(error.response?.data?.message || "Failed to load bookings");
+      setBookings([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -570,13 +582,23 @@ function App() {
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
+      if (!bookingId || !newStatus) {
+        setError("Invalid booking ID or status");
+        return;
+      }
+      
       await updateBookingStatus(bookingId, newStatus);
       await loadBookings();
       setError('');
       setSuccess('Status updated successfully');
+      
+      // Show special message for auto-archived bookings
+      if (newStatus === 'Delivered' || newStatus === 'Cancelled') {
+        setSuccess(`Status updated to ${newStatus} and booking automatically archived`);
+      }
     } catch (error) {
       console.error("Failed to update status:", error);
-      setError("Failed to update status");
+      setError(error.response?.data?.message || "Failed to update status");
     }
   };
 
@@ -584,6 +606,39 @@ function App() {
     if (selectedBooking) {
       await handleStatusUpdate(selectedBooking._id, newStatus);
     }
+  };
+
+  const handleArchiveToggle = async (bookingId, archived) => {
+    try {
+      if (!bookingId) {
+        setError("Invalid booking ID");
+        return;
+      }
+      
+      await toggleArchiveBooking(bookingId, archived);
+      await loadBookings();
+      setError('');
+      setSuccess(archived ? 'Booking archived successfully' : 'Booking unarchived successfully');
+    } catch (error) {
+      console.error("Failed to toggle archive:", error);
+      setError(error.response?.data?.message || "Failed to toggle archive status");
+    }
+  };
+
+  const getFilteredBookings = () => {
+    if (!bookings || !Array.isArray(bookings)) {
+      return [];
+    }
+    
+    let filtered = bookings;
+    
+    if (bookingSortBy === 'cancelled') {
+      filtered = filtered.filter(booking => booking && booking.status === 'Cancelled');
+    } else if (bookingSortBy === 'delivered') {
+      filtered = filtered.filter(booking => booking && booking.status === 'Delivered');
+    }
+    
+    return filtered;
   };
 
   const refreshUserData = async () => {
@@ -1698,199 +1753,316 @@ function App() {
         <div className={`rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 transition-colors duration-300 ${
           isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}>
-          <h2 className={`text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
-            <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
-              <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+          <div className="mb-6 sm:mb-8">
+            <h2 className={`text-xl sm:text-2xl lg:text-3xl font-bold flex items-center mb-2 ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>
+              <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+              </div>
+              {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
+            </h2>
+            <p className={`text-sm sm:text-base ${isDark ? 'text-gray-300' : 'text-gray-600'} ml-16 sm:ml-20`}>
+              Manage and track your railway logistics bookings
+            </p>
+          </div>
+          
+          {/* Archive Controls - Only for Admin */}
+          {currentUser?.role === 'admin' && (
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    setShowArchivedBookings(!showArchivedBookings);
+                    setBookingSortBy('all');
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    showArchivedBookings
+                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                  }`}
+                >
+                  <Archive className="h-4 w-4" />
+                  {showArchivedBookings ? 'View Active Bookings' : 'View Archived Bookings'}
+                </button>
+                
+                {!showArchivedBookings && (
+                  <select
+                    value={bookingSortBy}
+                    onChange={(e) => setBookingSortBy(e.target.value)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
+                  >
+                    <option value="all">All Bookings</option>
+                    <option value="cancelled">Cancelled Only</option>
+                    <option value="delivered">Delivered Only</option>
+                  </select>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {showArchivedBookings ? 'Showing archived bookings' : `Showing ${getFilteredBookings().length} active bookings`}
+              </div>
             </div>
-            {currentUser?.role === 'admin' ? 'All Bookings' : 'My Bookings'}
-          </h2>
+          )}
           
           {loading ? (
             <div className="text-center py-12">
               <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600 mb-4" />
               <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading bookings...</p>
             </div>
-          ) : bookings.length === 0 ? (
+          ) : getFilteredBookings().length === 0 ? (
             <div className="text-center py-12">
               <div className="bg-gray-100 dark:bg-gray-700 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="h-12 w-12 text-gray-400 dark:text-gray-500" />
               </div>
               <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
-                No bookings yet.
+                {showArchivedBookings ? 'No archived bookings found.' : 'No bookings found matching the current filter.'}
               </p>
             </div>
           ) : (
             <div className="space-y-6">
-              {bookings.map((booking) => (
+              {getFilteredBookings().map((booking) => (
                 <div
                   key={booking._id}
                   className={`border rounded-xl p-4 sm:p-6 transition-all duration-200 hover:shadow-lg ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
-                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                    booking.archived
+                      ? isDark 
+                        ? 'bg-gray-800 border-gray-500 opacity-75' 
+                        : 'bg-gray-100 border-gray-300 opacity-75'
+                      : isDark 
+                        ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
                 >
+                  {booking.archived && (
+                    <div className="mb-3 flex items-center gap-2">
+                      <Archive className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Archived</span>
+                    </div>
+                  )}
                   <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
                     <div className="space-y-3 flex-1 min-w-0">
-                      <h4 className={`text-xl font-bold break-words ${
-                        isDark ? 'text-white' : 'text-gray-800'
-                      }`}>
-                        {booking.route || booking.serviceId?.route}
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-600 rounded-lg min-w-0">
-                          <Package className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
-                            <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              {booking.quantity} tons
+                      <div className="mb-3">
+                        <h4 className={`text-lg sm:text-xl font-bold break-words ${
+                          isDark ? 'text-white' : 'text-gray-800'
+                        }`}>
+                          {booking.route || booking.serviceId?.route || 'Unknown Route'}
+                        </h4>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                          Booking ID: {booking._id ? booking._id.slice(-8) : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        {/* Quantity Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-gray-700/50 border border-gray-600 hover:bg-gray-600/50' 
+                            : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-blue-900/30' : 'bg-blue-100'
+                          }`}>
+                            <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Quantity</p>
+                            <p className={`text-sm sm:text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {booking.quantity || 0} tons
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg min-w-0">
-                          <Tag className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
-                            <p className={`font-bold truncate ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                              ₹{booking.total}
+                        
+                        {/* Total Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-green-900/20 border border-green-700/30 hover:bg-green-900/30' 
+                            : 'bg-green-50 border border-green-200 hover:bg-green-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-green-900/30' : 'bg-green-100'
+                          }`}>
+                            <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Total</p>
+                            <p className={`text-sm sm:text-base font-bold truncate ${isDark ? 'text-green-400' : 'text-green-600'}`}>
+                              ₹{booking.total || 0}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-0">
-                          <Calendar className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Booked On</p>
-                            <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              {new Date(booking.createdAt).toLocaleDateString()}
+                        
+                        {/* Date Card */}
+                        <div className={`flex items-center p-3 sm:p-4 rounded-xl min-w-0 transition-all duration-200 ${
+                          isDark 
+                            ? 'bg-indigo-900/20 border border-indigo-700/30 hover:bg-indigo-900/30' 
+                            : 'bg-indigo-50 border border-indigo-200 hover:bg-indigo-100'
+                        }`}>
+                          <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mr-3 sm:mr-4 ${
+                            isDark ? 'bg-indigo-900/30' : 'bg-indigo-100'
+                          }`}>
+                            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">Booked On</p>
+                            <p className={`text-sm sm:text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'N/A'}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 flex-shrink-0">
-                      {/* User Details Button - Show on top for mobile */}
-                      {currentUser?.role === 'admin' && (
-                        <button
-                          onClick={() => setExpandedUserForBookingId(expandedUserForBookingId === booking._id ? null : booking._id)}
-                          className={`p-2 rounded-lg ${isDark ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                          title={expandedUserForBookingId === booking._id ? 'Hide user details' : 'Show user details'}
-                          aria-label="Toggle user details"
-                        >
-                          <User className="h-5 w-5" />
-                        </button>
-                      )}
-                      
-                      {/* Status Badge */}
-                      <span className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap ${
-                        booking.status === 'Confirmed'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                          : booking.status === 'Declined'
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                            : booking.status === 'Cancellation Requested'
-                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
-                            : booking.status === 'Cancelled'
-                              ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                            : booking.status === 'Goods Received at Origin'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                            : booking.status === 'In Transit'
-                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
-                            : booking.status === 'Arrived at Destination'
-                              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400'
-                            : booking.status === 'Ready for Pickup'
-                              ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400'
-                            : booking.status === 'Out for Delivery'
-                              ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-400'
-                            : booking.status === 'Delivered'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                      }`}>
-                        {booking.status}
-                      </span>
-                      
-                      {/* View Details Button */}
-                      <button
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setBookingDetailsModalOpen(true);
-                        }}
-                        className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
-                      >
-                        View Details
-                      </button>
-                      
-                      {/* Admin Action Buttons */}
-                      {currentUser?.role === 'admin' && booking.status === 'Pending' && (
-                        <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0 w-full sm:w-auto">
+                      {/* Top Row for Mobile - Status and User Details */}
+                      <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                        {/* Status Badge */}
+                        <span className={`px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                          booking.status === 'Confirmed'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            : booking.status === 'Declined'
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                              : booking.status === 'Cancellation Requested'
+                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
+                                : booking.status === 'Cancelled'
+                                  ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                  : booking.status === 'Goods Received at Origin'
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                                    : booking.status === 'In Transit'
+                                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400'
+                                      : booking.status === 'Arrived at Destination'
+                                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400'
+                                        : booking.status === 'Ready for Pickup'
+                                          ? 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400'
+                                          : booking.status === 'Out for Delivery'
+                                            ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-400'
+                                            : booking.status === 'Delivered'
+                                              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                        }`}>
+                          {booking.status}
+                        </span>
+                        
+                        {/* User Details Button - Admin Only */}
+                        {currentUser?.role === 'admin' && (
                           <button
-                            onClick={async () => { 
-                              await updateBookingStatus(booking._id, 'Confirmed'); 
-                              await loadBookings(); 
-                              setError(''); // Clear any error messages
-                              setSuccess(''); // Clear any success messages
-                            }}
-                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm whitespace-nowrap"
+                            onClick={() => setExpandedUserForBookingId(expandedUserForBookingId === booking._id ? null : booking._id)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              isDark 
+                                ? 'text-gray-200 hover:bg-gray-600 hover:text-white' 
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                            }`}
+                            title={expandedUserForBookingId === booking._id ? 'Hide user details' : 'Show user details'}
+                            aria-label="Toggle user details"
                           >
-                            Approve
+                            <User className="h-5 w-5" />
                           </button>
-                          <button
-                            onClick={async () => { 
-                              await updateBookingStatus(booking._id, 'Declined'); 
-                              await loadBookings(); 
-                              setError(''); // Clear any error messages
-                              setSuccess(''); // Clear any success messages
-                            }}
-                            className="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm whitespace-nowrap"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      )}
-                      {currentUser?.role === 'admin' && booking.status === 'Cancellation Requested' && (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            onClick={async () => { 
-                              await updateBookingStatus(booking._id, 'Cancelled'); 
-                              await loadBookings(); 
-                              setError(''); // Clear any error messages
-                              setSuccess(''); // Clear any success messages
-                            }}
-                            className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm whitespace-nowrap"
-                          >
-                            Approve Cancellation
-                          </button>
-                          <button
-                            onClick={async () => { 
-                              await updateBookingStatus(booking._id, 'Pending'); 
-                              await loadBookings(); 
-                              setError(''); // Clear any error messages
-                              setSuccess(''); // Clear any success messages
-                            }}
-                            className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm whitespace-nowrap"
-                          >
-                            Reject Cancellation
-                          </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                       
-                      {/* User Action Buttons */}
-                      {currentUser?.role !== 'admin' && booking.status === 'Pending' && (
+                      {/* Action Buttons Row */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        {/* View Details Button */}
                         <button
                           onClick={() => {
-                            setBookingToCancel(booking);
-                            setCancellationModalOpen(true);
+                            setSelectedBooking(booking);
+                            setBookingDetailsModalOpen(true);
                           }}
-                          className="px-3 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors text-sm whitespace-nowrap"
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                         >
-                          Request Cancellation
+                          View Details
                         </button>
-                      )}
-                      {currentUser?.role !== 'admin' && booking.status === 'Cancellation Requested' && (
-                        <span className="px-3 py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-sm whitespace-nowrap">
-                          Cancellation Pending
-                        </span>
-                      )}
+                      
+                                              {/* Admin Action Buttons */}
+                        {currentUser?.role === 'admin' && booking.status === 'Pending' && (
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={async () => { 
+                                await updateBookingStatus(booking._id, 'Confirmed'); 
+                                await loadBookings(); 
+                                setError(''); // Clear any error messages
+                                setSuccess(''); // Clear any success messages
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={async () => { 
+                                await updateBookingStatus(booking._id, 'Declined'); 
+                                await loadBookings(); 
+                                setError(''); // Clear any error messages
+                                setSuccess(''); // Clear any success messages
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        )}
+                        {currentUser?.role === 'admin' && booking.status === 'Cancellation Requested' && (
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={async () => { 
+                                await updateBookingStatus(booking._id, 'Cancelled'); 
+                                await loadBookings(); 
+                                setError(''); // Clear any error messages
+                                setSuccess(''); // Clear any success messages
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Approve Cancellation
+                            </button>
+                            <button
+                              onClick={async () => { 
+                                await updateBookingStatus(booking._id, 'Pending'); 
+                                await loadBookings(); 
+                                setError(''); // Clear any error messages
+                                setSuccess(''); // Clear any success messages
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Reject Cancellation
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* User Action Buttons */}
+                        {currentUser?.role !== 'admin' && booking.status === 'Pending' && (
+                          <button
+                            onClick={() => {
+                              setBookingToCancel(booking);
+                              setCancellationModalOpen(true);
+                            }}
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                          >
+                            Request Cancellation
+                          </button>
+                        )}
+                        {currentUser?.role !== 'admin' && booking.status === 'Cancellation Requested' && (
+                          <span className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-sm font-medium text-center">
+                            Cancellation Pending
+                          </span>
+                        )}
+                        
+                        {/* Archive Button - Only for Admin */}
+                        {currentUser?.role === 'admin' && (
+                          <button
+                            onClick={() => handleArchiveToggle(booking._id, !booking.archived)}
+                            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md ${
+                              booking.archived
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-gray-600 text-white hover:bg-gray-700'
+                            }`}
+                            title={booking.archived ? 'Unarchive booking' : 'Archive booking'}
+                          >
+                            <Archive className="h-4 w-4 inline mr-1" />
+                            {booking.archived ? 'Unarchive' : 'Archive'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
@@ -2231,20 +2403,26 @@ function App() {
             {/* PWA Install Button - Desktop */}
             {isPWAReady && !isInstalled && (
               <button
-                onClick={() => {
-                  // Try to trigger install prompt if available
-                  if (window.deferredPrompt) {
-                    window.deferredPrompt.prompt();
-                    window.deferredPrompt.userChoice.then((choiceResult) => {
+                onClick={async () => {
+                  try {
+                    // Try to trigger install prompt if available
+                    if (window.deferredPrompt && window.deferredPrompt.prompt) {
+                      // Ensure the prompt is visible and focused
+                      window.deferredPrompt.prompt();
+                      const choiceResult = await window.deferredPrompt.userChoice;
                       if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the install prompt');
                       } else {
                         console.log('User dismissed the install prompt');
                       }
                       window.deferredPrompt = null;
-                    });
-                  } else {
-                    // Fallback: show PWA settings for manual install instructions
+                    } else {
+                      // Fallback: show PWA settings for manual install instructions
+                      setShowPWASettings(true);
+                    }
+                  } catch (error) {
+                    console.error('PWA install failed:', error);
+                    // Fallback to settings
                     setShowPWASettings(true);
                   }
                 }}

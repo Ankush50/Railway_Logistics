@@ -8,6 +8,7 @@ const bookingSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested', 'Goods Received at Origin', 'In Transit', 'Arrived at Destination', 'Ready for Pickup', 'Out for Delivery', 'Delivered'], default: 'Pending' },
   date: { type: String, required: true },
+  archived: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -7,6 +7,15 @@ exports.createBooking = async (req, res, next) => {
   try {
     const { serviceId, quantity } = req.body;
     
+    // Validate inputs
+    if (!serviceId || !quantity) {
+      return res.status(400).json({ success: false, message: 'Service ID and quantity are required' });
+    }
+    
+    if (quantity <= 0) {
+      return res.status(400).json({ success: false, message: 'Quantity must be greater than 0' });
+    }
+    
     // Get service
     const service = await RailwayService.findById(serviceId);
     if (!service) {
@@ -70,8 +79,39 @@ exports.getUserBookings = async (req, res, next) => {
 // Admin: get all bookings with user details
 exports.getAllBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({}).populate('serviceId').populate('userId', 'name username email phone role profilePicture');
+    const { archived = false } = req.query;
+    const filter = { archived: archived === 'true' };
+    const bookings = await Booking.find(filter).populate('serviceId').populate('userId', 'name username email phone role profilePicture');
     res.status(200).json({ success: true, data: bookings });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Admin: archive/unarchive booking
+exports.toggleArchiveBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { archived } = req.body;
+    
+    // Validate input
+    if (typeof archived !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'Archived must be a boolean value' });
+    }
+    
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    
+    booking.archived = archived;
+    await booking.save();
+    
+    res.status(200).json({ 
+      success: true, 
+      data: booking,
+      message: archived ? 'Booking archived successfully' : 'Booking unarchived successfully'
+    });
   } catch (err) {
     next(err);
   }
@@ -82,6 +122,12 @@ exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    // Validate inputs
+    if (!id || !status) {
+      return res.status(400).json({ success: false, message: 'Booking ID and status are required' });
+    }
+    
     const allowed = ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested', 'Goods Received at Origin', 'In Transit', 'Arrived at Destination', 'Ready for Pickup', 'Out for Delivery', 'Delivered'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
@@ -94,6 +140,12 @@ exports.updateBookingStatus = async (req, res, next) => {
     
     const previousStatus = booking.status;
     booking.status = status;
+    
+    // Auto-archive delivered or cancelled bookings
+    if (status === 'Delivered' || status === 'Cancelled') {
+      booking.archived = true;
+    }
+    
     await booking.save();
     
     // Create notification for user about status change

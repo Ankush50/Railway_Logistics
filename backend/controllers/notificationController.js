@@ -65,6 +65,12 @@ exports.getUnreadCount = async (req, res, next) => {
 // Create notification (internal use)
 exports.createNotification = async (userId, title, message, type = 'system', relatedBooking = null) => {
   try {
+    // Validate inputs
+    if (!userId || !title || !message) {
+      console.error('Invalid notification data:', { userId, title, message });
+      return null;
+    }
+    
     const notification = new Notification({
       userId,
       title,

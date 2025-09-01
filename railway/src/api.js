@@ -107,13 +107,18 @@ export const getUserBookings = async () => {
 };
 
 // Admin Bookings
-export const getAllBookings = async () => {
-  const response = await axios.get(`${API_URL}/bookings/all`);
+export const getAllBookings = async (archived = false) => {
+  const response = await axios.get(`${API_URL}/bookings/all?archived=${archived}`);
   return response.data.data;
 };
 
 export const updateBookingStatus = async (id, status) => {
   const response = await axios.put(`${API_URL}/bookings/${id}/status`, { status });
+  return response.data.data;
+};
+
+export const toggleArchiveBooking = async (id, archived) => {
+  const response = await axios.put(`${API_URL}/bookings/${id}/archive`, { archived });
   return response.data.data;
 };
 
