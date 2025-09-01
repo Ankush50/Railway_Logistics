@@ -167,15 +167,7 @@ const PWAInstallPrompt = ({ isDark }) => {
         isDark 
           ? 'bg-gray-800 border-gray-700 text-white' 
           : 'bg-white border-gray-200 text-gray-900'
-      }`} style={{
-        zIndex: 9999,
-        position: 'fixed',
-        bottom: '1rem',
-        left: '1rem',
-        right: '1rem',
-        maxWidth: 'calc(100vw - 2rem)',
-        margin: '0 auto'
-      }}>
+      }`}>
         {/* Close button */}
         <button
           onClick={handleDismiss}

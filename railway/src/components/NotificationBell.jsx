@@ -83,35 +83,6 @@ const NotificationBell = ({ isDark }) => {
   };
 
   const handleToggleDropdown = () => {
-    if (!showDropdown) {
-      // Calculate position to ensure dropdown is visible on mobile
-      const button = document.querySelector('[data-notification-bell]');
-      if (button) {
-        const rect = button.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // For mobile, use full width with padding
-        const isMobile = viewportWidth < 640; // sm breakpoint
-        const dropdownWidth = isMobile ? viewportWidth - 32 : Math.min(320, viewportWidth - 32);
-        
-        let right = '0';
-        let top = '100%';
-        
-        if (isMobile) {
-          // On mobile, position it as a modal-like overlay
-          right = '50%';
-          top = '50%';
-        } else {
-          // On desktop, position relative to button
-          if (rect.right + dropdownWidth > viewportWidth) {
-            right = `${viewportWidth - rect.right - dropdownWidth}px`;
-          }
-        }
-        
-        setDropdownPosition({ right, top });
-      }
-    }
     setShowDropdown(!showDropdown);
   };
 
@@ -148,9 +119,9 @@ const NotificationBell = ({ isDark }) => {
           <div className={`fixed sm:absolute mt-2 w-[calc(100vw-2rem)] sm:w-80 lg:w-96 max-h-[calc(100vh-4rem)] sm:max-h-96 overflow-y-auto rounded-lg shadow-xl z-50 transform transition-all duration-200 ${
             isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
           }`} style={{
-            right: window.innerWidth < 640 ? '1rem' : dropdownPosition.right,
-            top: window.innerWidth < 640 ? '2rem' : dropdownPosition.top,
-            transform: window.innerWidth < 640 ? 'translateX(50%)' : 'none'
+            right: window.innerWidth < 640 ? '1rem' : '0',
+            top: window.innerWidth < 640 ? '2rem' : '100%',
+            transform: window.innerWidth < 640 ? 'none' : 'none'
           }}>
             <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
