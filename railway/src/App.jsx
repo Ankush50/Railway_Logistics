@@ -1,8 +1,7 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, Suspense, lazy } from "react";
 import StatusChain from "./components/StatusChain";
 import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
-import React, { Suspense, lazy } from 'react';
 const BookingDetailsModal = lazy(() => import('./components/BookingDetailsModal'));
 const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'));
 const PWASettings = lazy(() => import('./components/PWASettings'));
