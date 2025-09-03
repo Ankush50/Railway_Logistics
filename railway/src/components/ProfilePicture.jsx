@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { User, Camera, X, Loader2, Upload } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
-import React, { lazy, Suspense } from 'react';
 const ImageCropper = lazy(() => import('./ImageCropper'));
 
 const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploadButton = false }) => {
