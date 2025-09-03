@@ -6,6 +6,17 @@ A comprehensive web-based logistics management system designed to streamline rai
 
 ## 🆕 Recent Improvements (September 2025)
 
+### 💳 Secure Payments (Razorpay)
+- Server-side order creation with signature verification
+- PDF receipt download per booking
+- CSP and Permissions-Policy configured for Razorpay Checkout
+- Frontend checkout with Card/Netbanking/UPI/Wallet
+- Optional Webhook endpoint scaffolded for future reconciliation
+
+### 🙌 Donation Button
+- Razorpay payment button embedded in sidebar under “Support Us”
+- Button id configurable via prop
+
 ### 📦 Archive Management System
 - **Automatic Archiving**: Delivered and cancelled bookings are automatically archived
 - **Smart Filtering**: Filter bookings by status (cancelled, delivered, all active)
@@ -124,6 +135,7 @@ A comprehensive web-based logistics management system designed to streamline rai
 - **Express.js** - Fast, unopinionated web framework
 - **MongoDB** - NoSQL database with Mongoose ODM
 - **JWT Authentication** - Secure token-based authentication
+ - **Razorpay** - Order creation, signature verification, webhook stub
 
 ### Storage & Deployment
 - **Cloud Storage** - Cloudinary for profile pictures
@@ -160,6 +172,51 @@ A comprehensive web-based logistics management system designed to streamline rai
 - [x] **CSRF Protection** - Cross-site request forgery prevention
 
 ## 📊 Performance Features
+## 💳 Payments (Razorpay)
+
+### Environment
+Add these to backend environment (Render or .env):
+
+- `RAZORPAY_KEY_ID=rzp_test_xxx`
+- `RAZORPAY_KEY_SECRET=xxxxxxxx`
+- `RAZORPAY_WEBHOOK_SECRET=whsec_xxx` (optional, for webhooks)
+
+### Backend Endpoints
+- `POST /api/payments/order` → Create order for a booking (auth required)
+- `POST /api/payments/verify` → Verify signature and mark booking paid
+- `GET /api/payments/receipt/:bookingId` → Stream PDF receipt (auth required)
+- `POST /api/payments/webhook` → Optional webhook (signature validated)
+
+### Frontend Usage
+- “Pay Now” on pending bookings opens Razorpay Checkout and verifies on success
+- “Download Receipt” on confirmed bookings opens the PDF receipt
+
+### Headers and CSP (already configured)
+- Backend Helmet CSP allows Razorpay script/connect/frame
+- Netlify `netlify.toml` updated to allow `https://checkout.razorpay.com` and `https://*.razorpay.com` in script-src, connect-src, frame-src and to allow `payment` in Permissions-Policy
+
+### Notes
+- Receipt id kept under 40 char limit (`rcpt_<bookingId>`)
+- Amount is validated and sent in paise (₹ × 100)
+- Booking ownership enforced on the server
+
+## 🙌 Donation Button
+
+### Where
+- Sidebar bottom under “Support Us” card
+
+### Component
+`src/components/DonationButton.jsx` injects Razorpay’s payment button script.
+
+### Configure Button Id
+In `src/App.jsx`:
+
+```jsx
+<DonationButton buttonId="pl_RD3kiXc8kmbonR" />
+```
+
+You can replace the id with another Payment Button id generated in the Razorpay Dashboard.
+
 
 - [x] **Image Optimization** - Automatic image compression
 - [x] **Lazy Loading** - On-demand content loading
@@ -523,7 +580,7 @@ We welcome contributions from the community! Please follow these guidelines:
 
 ### Phase 2 (Planned)
 - [ ] Real-time tracking
-- [ ] Payment integration
+- [x] Payment integration (Razorpay)
 - [ ] Advanced analytics
 - [ ] Multi-language support
 
@@ -547,4 +604,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for the Railway Logistics Industry**
 
-*Last updated: September 2025 - Enhanced with Archive Management, Mobile Optimization, and Robust Error Handling*
+*Last updated: September 3, 2025 — Enhanced with Archive Management, Mobile Optimization, Robust Error Handling, and Razorpay Payments*
