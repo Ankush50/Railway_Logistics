@@ -1,6 +1,6 @@
-const CACHE_NAME = 'turbo-transit-v1.1.0';
-const STATIC_CACHE = 'turbo-transit-static-v1.1.2';
-const DYNAMIC_CACHE = 'turbo-transit-dynamic-v1.1.2';
+const CACHE_NAME = 'turbo-transit-v1.1.3';
+const STATIC_CACHE = 'turbo-transit-static-v1.1.3';
+const DYNAMIC_CACHE = 'turbo-transit-dynamic-v1.1.3';
 
 // Files to cache immediately
 const STATIC_FILES = [
