@@ -6,73 +6,44 @@ const PWAInstallPrompt = ({ isDark }) => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installLoading, setInstallLoading] = useState(false);
-  const [showManualInstall, setShowManualInstall] = useState(false);
 
   useEffect(() => {
-    // Check if app is already installed
     const checkIfInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches ||
-          window.navigator.standalone === true) {
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
         setIsInstalled(true);
-        return;
-      }
-      
-      // Check if running in TWA (Trusted Web Activity)
-      if (document.referrer.includes('android-app://')) {
-        setIsInstalled(true);
-        return;
       }
     };
 
-    // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Store globally for other components to use
       window.deferredPrompt = e;
-      setShowInstallPrompt(true);
+      if (!isInstalled) {
+        setShowInstallPrompt(true);
+      }
     };
 
-    // Check if we should show manual install instructions
-    const checkManualInstall = () => {
-      // Show manual install if no deferred prompt after 3 seconds and not installed
-      setTimeout(() => {
-        if (!deferredPrompt && !isInstalled && 'serviceWorker' in navigator) {
-          setShowManualInstall(true);
-        }
-      }, 3000);
-    };
-
-    // Listen for appinstalled event
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
-      // Clear global reference
       window.deferredPrompt = null;
-      
-              // Show success message
-        if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
-          navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification('Turbo Transit Installed! 🎉', {
-              body: 'Your railway logistics app is now installed and ready to use.',
-              icon: '/favicon2.ico',
-              badge: '/favicon2.ico',
-              tag: 'install-success'
-            });
+      if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification('Turbo Transit Installed! 🎉', {
+            body: 'Your railway logistics app is now installed and ready to use.',
+            icon: '/favicon2.ico',
+            badge: '/favicon2.ico',
+            tag: 'install-success'
           });
-        }
+        });
+      }
     };
 
-    // Check if already installed
     checkIfInstalled();
-    checkManualInstall();
-
-    // Add event listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Check periodically for installation status
     const checkInterval = setInterval(checkIfInstalled, 5000);
 
     return () => {
@@ -80,84 +51,70 @@ const PWAInstallPrompt = ({ isDark }) => {
       window.removeEventListener('appinstalled', handleAppInstalled);
       clearInterval(checkInterval);
     };
-  }, []);
+  }, [isInstalled]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
     setInstallLoading(true);
-    
+
     try {
-      // Ensure the prompt is visible and focused
-      if (deferredPrompt.prompt) {
-        // Show the install prompt
-        deferredPrompt.prompt();
-        
-        // Wait for the user to respond to the prompt
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        if (outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-          setShowInstallPrompt(false);
-        } else {
-          console.log('User dismissed the install prompt');
-          // Hide prompt for a while, then show again later
-          setTimeout(() => setShowInstallPrompt(true), 30000);
-        }
+      // Show the native browser install prompt
+      deferredPrompt.prompt();
+
+      // Wait for the user to respond
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        // The 'appinstalled' event will handle hiding the prompt
       } else {
-        // Fallback for browsers that don't support prompt method
-        handleManualInstall();
+        console.log('User dismissed the install prompt');
       }
+
     } catch (error) {
       console.error('Installation failed:', error);
-      // Fallback to manual install
+      // Fallback to manual install instructions if prompt fails
       handleManualInstall();
     } finally {
-      setInstallLoading(false);
+      // The prompt can only be used once, so we clear it.
       setDeferredPrompt(null);
-      // Clear global reference
       window.deferredPrompt = null;
+      // We only hide the prompt if the user dismissed it.
+      // If accepted, the 'appinstalled' event will hide it.
+      if ((await deferredPrompt.userChoice).outcome !== 'accepted') {
+        setShowInstallPrompt(false);
+      }
+      setInstallLoading(false);
     }
   };
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
-    setShowManualInstall(false);
-    // Show again after 1 hour
-    setTimeout(() => setShowInstallPrompt(true), 3600000);
   };
 
   const handleManualInstall = () => {
-    // For browsers that don't support beforeinstallprompt
-    // Show instructions for manual installation
     const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
     const isEdge = /Edg/.test(navigator.userAgent);
     const isFirefox = /Firefox/.test(navigator.userAgent);
-    
+
     let instructions = '';
     if (isChrome || isEdge) {
-      instructions = 'Click on browser menu, then click on "Save and Share" and select "Install page as App';
+      instructions = 'Click on browser menu, then click on "Save and Share" and select "Install page as App"';
     } else if (isFirefox) {
       instructions = 'Click the menu button (≡) and select "Install"';
     } else {
       instructions = 'Look for an install option in your browser menu or address bar';
     }
-    
+
     alert(`To install this app:\n\n${instructions}\n\nOr use your browser's "Add to Home Screen" option.`);
   };
 
   const handleLearnMore = () => {
-    // Open help modal or navigate to help page
     window.open('https://web.dev/installable/', '_blank');
   };
 
-  // Don't show if already installed
-  if (isInstalled) {
-    return null;
-  }
-
-  // Show manual install if no automatic prompt available
-  if (!showInstallPrompt && !showManualInstall) {
+  if (isInstalled || !showInstallPrompt) {
     return null;
   }
 
@@ -168,7 +125,6 @@ const PWAInstallPrompt = ({ isDark }) => {
           ? 'bg-gray-800 border-gray-700 text-white' 
           : 'bg-white border-gray-200 text-gray-900'
       }`}>
-        {/* Close button */}
         <button
           onClick={handleDismiss}
           className={`absolute top-3 right-3 p-1 rounded-lg transition-colors ${
@@ -182,7 +138,6 @@ const PWAInstallPrompt = ({ isDark }) => {
         </button>
 
         <div className="p-6">
-          {/* Header */}
           <div className="flex items-center mb-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-3 ${
               isDark ? 'bg-blue-900/20' : 'bg-blue-100'
@@ -199,7 +154,6 @@ const PWAInstallPrompt = ({ isDark }) => {
             </div>
           </div>
 
-          {/* Benefits */}
           <div className="space-y-3 mb-6">
             <div className="flex items-center space-x-3">
               <Smartphone className={`h-4 w-4 ${
@@ -221,7 +175,6 @@ const PWAInstallPrompt = ({ isDark }) => {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex space-x-3">
             {deferredPrompt ? (
               <button
@@ -263,7 +216,6 @@ const PWAInstallPrompt = ({ isDark }) => {
             </button>
           </div>
 
-          {/* Footer note */}
           <p className={`text-xs mt-4 text-center ${
             isDark ? 'text-gray-400' : 'text-gray-500'
           }`}>
@@ -271,7 +223,6 @@ const PWAInstallPrompt = ({ isDark }) => {
           </p>
         </div>
 
-        {/* Decorative elements */}
         <div className={`absolute -top-2 -left-2 w-4 h-4 rounded-full ${
           isDark ? 'bg-blue-500' : 'bg-blue-400'
         } opacity-20 animate-pulse`}></div>
