@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow admin or debug routes if any exist
+Disallow: /admin
+Disallow: /debug
+
+# Crawl-delay for polite crawling (ignored by Google but safe)
+Crawl-delay: 5
+
+# Sitemap
+Sitemap: https://turbotransit1.netlify.app/sitemap.xml
+
