@@ -1,11 +1,12 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import StatusChain from "./components/StatusChain";
-import BookingDetailsModal from "./components/BookingDetailsModal";
 import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
-import PWASettings from "./components/PWASettings";
-import DonationButton from "./components/DonationButton";
+import React, { Suspense, lazy } from 'react';
+const BookingDetailsModal = lazy(() => import('./components/BookingDetailsModal'));
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'));
+const PWASettings = lazy(() => import('./components/PWASettings'));
+const DonationButton = lazy(() => import('./components/DonationButton'));
 import usePWA from "./hooks/usePWA";
 import {
   Search,
@@ -1110,7 +1111,7 @@ function App() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
+              <label htmlFor="search-from" className={`block text-sm font-medium mb-3 ${
                 isDark ? 'text-gray-200' : 'text-gray-700'
               }`}>
                 From
@@ -1118,6 +1119,7 @@ function App() {
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
+                  id="search-from"
                   type="text"
                   placeholder="Origin city"
                   className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
@@ -1134,7 +1136,7 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
+              <label htmlFor="search-to" className={`block text-sm font-medium mb-3 ${
                 isDark ? 'text-gray-200' : 'text-gray-700'
               }`}>
                 To
@@ -1142,6 +1144,7 @@ function App() {
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
+                  id="search-to"
                   type="text"
                   placeholder="Destination city"
                   className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
@@ -1158,7 +1161,7 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
+              <label htmlFor="search-date" className={`block text-sm font-medium mb-3 ${
                 isDark ? 'text-gray-200' : 'text-gray-700'
               }`}>
                 Date
@@ -1166,6 +1169,7 @@ function App() {
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
+                  id="search-date"
                   type="date"
                   className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                     isDark 
@@ -1181,7 +1185,7 @@ function App() {
             </div>
 
             <div>
-              <label className={`block text-sm font-medium mb-3 ${
+              <label htmlFor="search-weight" className={`block text-sm font-medium mb-3 ${
                 isDark ? 'text-gray-200' : 'text-gray-700'
               }`}>
                 Weight (tons)
@@ -1189,6 +1193,7 @@ function App() {
               <div className="relative">
                 <Package className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
+                  id="search-weight"
                   type="number"
                   placeholder="Weight needed"
                   className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
@@ -1809,6 +1814,7 @@ function App() {
                     }`}
                     value={bookingSearchId}
                     onChange={(e) => setBookingSearchId(e.target.value)}
+                    aria-label="Search by Booking ID"
                   />
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 </div>
@@ -2677,6 +2683,7 @@ function App() {
           <button
             onClick={() => setSidebarOpen(prev => !prev)}
             className="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Toggle menu"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -2701,6 +2708,7 @@ function App() {
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
@@ -2708,6 +2716,7 @@ function App() {
             {/* PWA Install Button - Desktop */}
             {isPWAReady && !isInstalled && (
               <button
+                aria-label="Install app"
                 onClick={async () => {
                   try {
                     // Try to trigger install prompt if available
@@ -2754,6 +2763,7 @@ function App() {
                   ? 'text-gray-300 hover:bg-gray-700' 
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
+              aria-label="Open profile"
             >
               <ProfilePicture 
                 user={currentUser} 
@@ -3083,6 +3093,7 @@ function App() {
       )}
 
       {/* Booking Details Modal */}
+      <Suspense fallback={null}>
       <BookingDetailsModal
         booking={selectedBooking}
         isOpen={bookingDetailsModalOpen}
@@ -3094,16 +3105,21 @@ function App() {
         currentUser={currentUser}
         onStatusUpdate={handleStatusUpdateFromChain}
       />
+      </Suspense>
 
       {/* PWA Install Prompt */}
-      <PWAInstallPrompt isDark={isDark} />
+      <Suspense fallback={null}>
+        <PWAInstallPrompt isDark={isDark} />
+      </Suspense>
 
       {/* PWA Settings Modal */}
+      <Suspense fallback={null}>
       <PWASettings 
         isDark={isDark}
         isOpen={showPWASettings}
         onClose={() => setShowPWASettings(false)}
       />
+      </Suspense>
 
       {/* PWA Update Notification */}
       {hasUpdate && (

@@ -97,6 +97,7 @@ const NotificationBell = ({ isDark }) => {
             ? 'text-gray-300 hover:bg-gray-700' 
             : 'text-gray-700 hover:bg-gray-100'
         }`}
+        aria-label="Open notifications"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -150,6 +151,7 @@ const NotificationBell = ({ isDark }) => {
                         ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
                         : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
                     }`}
+                    aria-label="Close notifications"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -187,6 +189,7 @@ const NotificationBell = ({ isDark }) => {
                                   ? 'hover:bg-gray-600 text-gray-400 hover:text-white' 
                                   : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
                               }`}
+                              aria-label="Mark notification as read"
                             >
                               <Check className="h-3 w-3" />
                             </button>

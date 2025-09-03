@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, Camera, X, Loader2, Upload } from 'lucide-react';
 import { uploadProfilePicture, deleteProfilePicture, getProfilePictureUrl } from '../api';
-import ImageCropper from './ImageCropper';
+import React, { lazy, Suspense } from 'react';
+const ImageCropper = lazy(() => import('./ImageCropper'));
 
 const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploadButton = false }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -170,6 +171,10 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
               src={getProfileImageUrl()}
               alt={`${user.name}'s profile`}
               className="w-full h-full object-cover"
+              width="96"
+              height="96"
+              decoding="async"
+              loading="lazy"
               onError={(e) => {
                 console.error('Failed to load profile picture:', e);
                 e.target.style.display = 'none';
@@ -314,6 +319,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
 
       {/* Image Cropper */}
       {showCropper && selectedFile && (
+        <Suspense fallback={null}>
         <ImageCropper
           imageFile={selectedFile}
           onCrop={handleCropComplete}
@@ -323,6 +329,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
           }}
           isDark={isDark}
         />
+        </Suspense>
       )}
     </>
   );
