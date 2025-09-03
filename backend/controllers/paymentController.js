@@ -12,6 +12,11 @@ const razorpay = new Razorpay({
 // Create an order tied to a booking
 exports.createOrder = async (req, res, next) => {
   try {
+    // Basic env sanity check
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ success: false, message: 'Razorpay keys not configured on server', data: { hint: 'Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET and redeploy' } });
+    }
+
     const { bookingId } = req.body;
     if (!bookingId) return next(new ErrorResponse('bookingId is required', 400));
 
@@ -19,8 +24,11 @@ exports.createOrder = async (req, res, next) => {
       return next(new ErrorResponse('Unauthorized: missing user context', 401));
     }
 
-    const booking = await Booking.findOne({ _id: bookingId, userId: req.user._id });
-    if (!booking) return next(new ErrorResponse('Booking not found for this user', 404));
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return next(new ErrorResponse('Booking not found', 404));
+    if (!booking.userId || booking.userId.toString() !== req.user._id.toString()) {
+      return next(new ErrorResponse('Booking does not belong to current user', 403));
+    }
 
     // Amount in paise
     const amountNumber = Number(booking.total);

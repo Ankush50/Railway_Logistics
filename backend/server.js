@@ -233,6 +233,10 @@ app.get('/api/config/test', (req, res) => {
       hasApiKey: !!process.env.CLOUDINARY_API_KEY,
       hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
     },
+    razorpay: {
+      configured: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+      keyIdMasked: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.slice(0,4) + '***' + process.env.RAZORPAY_KEY_ID.slice(-4) : null
+    },
     database: {
       connected: mongoose.connection.readyState === 1,
       readyState: mongoose.connection.readyState
