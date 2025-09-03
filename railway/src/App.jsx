@@ -61,7 +61,9 @@ import {
   updateProfile,
   changePassword,
   uploadProfilePicture,
+  downloadReceiptPdf,
 } from "./api";
+import { payForBooking } from "./utils/payment";
 
 // Theme Context
 const ThemeContext = createContext();
@@ -2059,20 +2061,51 @@ function App() {
                         
                         {/* User Action Buttons */}
                         {currentUser?.role !== 'admin' && booking.status === 'Pending' && (
-                          <button
-                            onClick={() => {
-                              setBookingToCancel(booking);
-                              setCancellationModalOpen(true);
-                            }}
-                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                          >
-                            Request Cancellation
-                          </button>
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await payForBooking(booking._id, currentUser, async () => {
+                                    await loadBookings();
+                                    setSuccess('Payment successful!');
+                                    setError('');
+                                  }, (err) => {
+                                    console.error(err);
+                                    setError(err?.message || 'Payment failed or cancelled');
+                                    setSuccess('');
+                                  });
+                                } catch (e) {
+                                  setError('Unable to start payment');
+                                  setSuccess('');
+                                }
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Pay Now
+                            </button>
+                            <button
+                              onClick={() => {
+                                setBookingToCancel(booking);
+                                setCancellationModalOpen(true);
+                              }}
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            >
+                              Request Cancellation
+                            </button>
+                          </div>
                         )}
                         {currentUser?.role !== 'admin' && booking.status === 'Cancellation Requested' && (
                           <span className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-sm font-medium text-center">
                             Cancellation Pending
                           </span>
+                        )}
+                        {currentUser?.role !== 'admin' && booking.status === 'Confirmed' && (
+                          <button
+                            onClick={() => downloadReceiptPdf(booking._id)}
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                          >
+                            Download Receipt
+                          </button>
                         )}
                         
                         {/* Archive Button - Only for Admin */}

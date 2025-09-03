@@ -231,3 +231,25 @@ export const markAllNotificationsAsRead = async () => {
   const response = await axios.put(`${API_URL}/notifications/mark-all-read`);
   return response.data;
 };
+
+// Payments API
+export const createPaymentOrder = async (bookingId) => {
+  const response = await axios.post(`${API_URL}/payments/order`, { bookingId });
+  return response.data.data; // { orderId, amount, currency, key }
+};
+
+export const verifyPayment = async ({ bookingId, razorpay_order_id, razorpay_payment_id, razorpay_signature }) => {
+  const response = await axios.post(`${API_URL}/payments/verify`, {
+    bookingId,
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature
+  });
+  return response.data.data;
+};
+
+export const downloadReceiptPdf = (bookingId) => {
+  const baseUrl = API_URL.replace('/api', '');
+  const url = `${baseUrl}/api/payments/receipt/${bookingId}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+};

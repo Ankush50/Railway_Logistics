@@ -9,6 +9,15 @@ const bookingSchema = new mongoose.Schema({
   status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled', 'Declined', 'Cancellation Requested', 'Goods Received at Origin', 'In Transit', 'Arrived at Destination', 'Ready for Pickup', 'Out for Delivery', 'Delivered'], default: 'Pending' },
   date: { type: String, required: true },
   archived: { type: Boolean, default: false },
+  payment: {
+    orderId: { type: String },
+    paymentId: { type: String },
+    signature: { type: String },
+    currency: { type: String, default: 'INR' },
+    amount: { type: Number },
+    status: { type: String, enum: ['created', 'paid', 'failed'], default: 'created' },
+    paidAt: { type: Date }
+  },
   createdAt: { type: Date, default: Date.now }
 });
 
