@@ -23,6 +23,14 @@ export const payForBooking = async (bookingId, user, onSuccess, onError) => {
       name: 'TurboTransit',
       description: `Booking ${bookingId}`,
       order_id: orderId,
+     method: {
+        netbanking: true,
+        card: true,
+        upi: true,
+        wallet: true,
+        emi: false,
+        paylater: false
+      },
       prefill: {
         name: user?.name || '',
         email: user?.email || ''

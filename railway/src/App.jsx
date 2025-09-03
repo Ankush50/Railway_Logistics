@@ -5,6 +5,7 @@ import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import PWASettings from "./components/PWASettings";
+import DonationButton from "./components/DonationButton";
 import usePWA from "./hooks/usePWA";
 import {
   Search,
@@ -2485,6 +2486,12 @@ function App() {
             </div>
 
             {/* Logout moved to profile modal */}
+            <div className="mt-8 mb-6 px-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Support Us</div>
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800">
+                <DonationButton buttonId="pl_RD3kiXc8kmbonR" />
+              </div>
+            </div>
           </nav>
         </div>
       </>
