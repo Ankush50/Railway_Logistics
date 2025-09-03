@@ -2454,6 +2454,7 @@ function App() {
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
             </button>
