@@ -15,21 +15,40 @@ exports.createOrder = async (req, res, next) => {
     const { bookingId } = req.body;
     if (!bookingId) return next(new ErrorResponse('bookingId is required', 400));
 
+    if (!req.user?._id) {
+      return next(new ErrorResponse('Unauthorized: missing user context', 401));
+    }
+
     const booking = await Booking.findOne({ _id: bookingId, userId: req.user._id });
-    if (!booking) return next(new ErrorResponse('Booking not found', 404));
+    if (!booking) return next(new ErrorResponse('Booking not found for this user', 404));
 
     // Amount in paise
-    const amountPaise = Math.round(Number(booking.total) * 100);
+    const amountNumber = Number(booking.total);
+    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+      return next(new ErrorResponse('Invalid booking total amount', 400));
+    }
+    const amountPaise = Math.round(amountNumber * 100);
 
-    const order = await razorpay.orders.create({
-      amount: amountPaise,
-      currency: 'INR',
-      receipt: `rcpt_${bookingId}_${Date.now()}`,
-      notes: {
-        bookingId: booking._id.toString(),
-        userId: req.user._id.toString()
-      }
-    });
+    let order;
+    try {
+      order = await razorpay.orders.create({
+        amount: amountPaise,
+        currency: 'INR',
+        receipt: `rcpt_${bookingId}_${Date.now()}`,
+        notes: {
+          bookingId: booking._id.toString(),
+          userId: req.user._id.toString()
+        }
+      });
+    } catch (rzpErr) {
+      const code = rzpErr?.statusCode || rzpErr?.error?.statusCode || 400;
+      const message = rzpErr?.error?.description || rzpErr?.message || 'Failed to create Razorpay order';
+      // Attach diagnostic info (non-sensitive)
+      return res.status(code).json({ success: false, message, data: {
+        hint: 'Check Razorpay key id/secret and amount >= 100 paise',
+        amountPaise
+      }});
+    }
 
     booking.payment = {
       orderId: order.id,
