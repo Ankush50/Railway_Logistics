@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-// Prefer configured API URL. Fallback to same-origin or localhost for dev.
+// Prefer configured API URL. Fallback to known deployment or localhost for dev.
 const getDefaultApiUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  const envUrl = import.meta?.env?.VITE_API_URL;
+  if (envUrl && typeof envUrl === 'string') return envUrl.replace(/\/$/, '');
+
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
+    // If running on Netlify site, use known backend base
+    const isNetlify = hostname.includes('netlify.app');
+    if (isNetlify) {
+      return 'https://turbotransit-backend.onrender.com/api';
+    }
+    // Same-origin API when backend is reverse-proxied under /api
     if (hostname && hostname !== 'localhost') {
       return `${protocol}//${hostname}/api`;
     }

@@ -109,14 +109,33 @@ app.use('/api/', strictLimiter);
 app.use('/api/auth', authLimiter);
 
 // CORS configuration - Balanced for security and functionality
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  process.env.CORS_ORIGIN_2,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'http://localhost:3000',
+  'https://turbotransit1.netlify.app',
+  'https://www.turbotransit1.netlify.app'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'https://turbotransit1.netlify.app',
+  origin: function(origin, callback) {
+    // Allow non-browser clients or same-origin requests with no origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Type', 'Content-Length'],
   maxAge: 86400 // 24 hours
 }));
+
+// Handle preflight quickly
+app.options('*', cors());
 
 // Parse cookies for httpOnly auth
 app.use(cookieParser());
