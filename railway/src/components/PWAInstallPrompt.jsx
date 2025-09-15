@@ -142,7 +142,7 @@ const PWAInstallPrompt = ({ isDark }) => {
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-3 ${
               isDark ? 'bg-blue-900/20' : 'bg-blue-100'
             }`}>
-              <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <Download className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <h3 className="font-bold text-lg">Install Turbo Transit</h3>
@@ -163,7 +163,7 @@ const PWAInstallPrompt = ({ isDark }) => {
             </div>
             <div className="flex items-center space-x-3">
               <Monitor className={`h-4 w-4 ${
-                isDark ? 'text-blue-400' : 'text-blue-600'
+                isDark ? 'text-red-400' : 'text-red-600'
               }`} />
               <span className="text-sm">Works offline</span>
             </div>
@@ -180,7 +180,7 @@ const PWAInstallPrompt = ({ isDark }) => {
               <button
                 onClick={handleInstallClick}
                 disabled={installLoading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-medium hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {installLoading ? (
                   <>
@@ -197,7 +197,7 @@ const PWAInstallPrompt = ({ isDark }) => {
             ) : (
               <button
                 onClick={handleManualInstall}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center"
+                className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-xl font-medium hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center justify-center"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Install App

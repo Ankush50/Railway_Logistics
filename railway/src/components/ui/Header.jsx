@@ -15,7 +15,7 @@ const Header = ({ onSignIn, onSignUp }) => {
 				</nav>
 				<div className="flex items-center gap-3">
 					<button onClick={onSignIn} className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Sign in</button>
-					<button onClick={onSignUp} className="px-3 py-2 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-black">Get started</button>
+					<button onClick={onSignUp} className="px-3 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700">Register</button>
 				</div>
 			</div>
 		</header>

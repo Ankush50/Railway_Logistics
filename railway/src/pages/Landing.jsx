@@ -12,8 +12,13 @@ const Landing = ({ onSignIn, onSignUp, onDiscover }) => {
 		<div className="min-h-screen bg-white text-gray-900">
 			<Header onSignIn={onSignIn} onSignUp={onSignUp} />
 			<main>
-				<Hero onDiscover={onDiscover} />
-				<SearchHero onSearch={onDiscover} />
+				<Hero onDiscover={() => {
+					try {
+						const el = document.getElementById('search-hero');
+						el && el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					} catch (_) {}
+				}} />
+				<SearchHero onSearch={(form) => { onDiscover?.(form); }} />
 				<Features />
 				<HowItWorks />
 				<Industries />

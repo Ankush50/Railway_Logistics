@@ -1,7 +1,7 @@
 import React from "react";
 
 const features = [
-	{ title: "Cogo Assured", desc: "Guaranteed reliability with vetted partners and priority handling." },
+	{ title: "Assured Service", desc: "Guaranteed reliability with vetted partners and priority handling." },
 	{ title: "Freight Contracts", desc: "Fix rates for the long term and avoid market volatility." },
 	{ title: "Spot Booking", desc: "Instant rates and booking in minutes at competitive prices." },
 	{ title: "Pay Later", desc: "Unlock instant credit and pay at your convenience." },

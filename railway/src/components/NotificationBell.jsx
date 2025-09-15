@@ -136,8 +136,8 @@ const NotificationBell = ({ isDark }) => {
                       disabled={loading}
                       className={`text-xs sm:text-sm px-2 py-1 rounded ${
                         isDark 
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          ? 'bg-red-600 hover:bg-red-700 text-white' 
+                          : 'bg-red-500 hover:bg-red-600 text-white'
                       } disabled:opacity-50`}
                     >
                       {loading ? 'Marking...' : 'Mark all read'}

@@ -26,7 +26,7 @@ const Hero = ({ onDiscover }) => {
 					<img src="/hero-map.png" alt="Global routes" className="w-full rounded-xl shadow-lg ring-1 ring-black/5" />
 					<div className="absolute -bottom-6 -left-6 bg-white rounded-lg shadow p-4 w-56 ring-1 ring-black/5">
 						<p className="text-xs text-gray-500">Estimated Freight Price Range</p>
-						<p className="mt-1 font-semibold">$2,787 – $3,576 /ctr</p>
+						<p className="mt-1 font-semibold">₹2,787 – ₹3,576 /ctr</p>
 					</div>
 				</div>
 			</div>

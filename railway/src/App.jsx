@@ -1316,7 +1316,7 @@ function App() {
                 <Tag className="h-5 w-5 mr-3 text-blue-500" />
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
-                  <p className={`font-bold text-lg ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <p className={`font-bold text-lg ${isDark ? 'text-red-400' : 'text-red-600'}`}>
                     ₹{service.pricePerTon}/ton
                   </p>
                 </div>
@@ -1520,7 +1520,7 @@ function App() {
                 className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center ${
                   showAddForm
                     ? 'bg-gray-500 text-white hover:bg-gray-600'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                    : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800'
                 }`}
               >
                 <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -1680,7 +1680,7 @@ function App() {
                     <button
                       onClick={handleAddService}
                       disabled={adminLoading}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium flex-1 sm:flex-none"
+                      className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium flex-1 sm:flex-none"
                     >
                       {adminLoading ? (editingService ? "Updating..." : "Adding...") : (editingService ? "Update Service" : "Add Service")}
                     </button>
@@ -1773,7 +1773,7 @@ function App() {
                       <div className="flex space-x-2 sm:space-x-3">
                         <button 
                           onClick={() => handleEditService(service)}
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 sm:p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1.5 sm:p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         >
                           <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
@@ -1855,7 +1855,7 @@ function App() {
               </div>
               
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                <span className="text-red-600 dark:text-red-400 font-semibold">
                   📋 Showing {getFilteredBookings().length} active bookings
                 </span>
               </div>
@@ -1864,7 +1864,7 @@ function App() {
           
           {loading ? (
             <div className="text-center py-12">
-              <Loader2 className="mx-auto h-12 w-12 animate-spin text-blue-600 mb-4" />
+              <Loader2 className="mx-auto h-12 w-12 animate-spin text-red-600 mb-4" />
               <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading bookings...</p>
             </div>
           ) : getFilteredBookings().length === 0 ? (
@@ -2026,7 +2026,7 @@ function App() {
                             setSelectedBooking(booking);
                             setBookingDetailsModalOpen(true);
                           }}
-                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                         >
                           View Details
                         </button>
@@ -2078,7 +2078,7 @@ function App() {
                                 setError(''); // Clear any error messages
                                 setSuccess(''); // Clear any success messages
                               }}
-                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                             >
                               Reject Cancellation
                             </button>
@@ -2128,7 +2128,7 @@ function App() {
                         {currentUser?.role !== 'admin' && booking.status === 'Confirmed' && (
                           <button
                             onClick={() => downloadReceiptPdf(booking._id)}
-                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                           >
                             Download Receipt
                           </button>
@@ -2414,7 +2414,7 @@ function App() {
                             setSelectedBooking(booking);
                             setBookingDetailsModalOpen(true);
                           }}
-                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+                          className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                         >
                           View Details
                         </button>
@@ -2445,7 +2445,7 @@ function App() {
   // Sidebar Component
   const Sidebar = () => {
     const navItems = [
-      { id: "search", label: "Search Services", icon: Search, color: "text-blue-600" },
+      { id: "search", label: "Search Services", icon: Search, color: "text-red-600" },
       { id: "bookings", label: currentUser?.role === 'admin' ? "User Bookings" : "My Bookings", icon: Eye, color: "text-green-600" },
       ...(currentUser?.role === "admin" ? [
         { id: "archived-bookings", label: "Archived Bookings", icon: Archive, color: "text-orange-600" },
@@ -2528,6 +2528,12 @@ function App() {
   const handleBookService = (service) => {
     if (currentUser?.role === 'admin') {
       setError('Admins cannot make bookings.');
+      return;
+    }
+    if (!isAuthenticated) {
+      // Capture intent and prompt login
+      setPendingSearch(null);
+      setShowLogin(true);
       return;
     }
     setSelectedService(service);
@@ -2675,14 +2681,14 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600 mb-4" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-red-600 mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show landing for guests; CTA opens auth forms. Capture search intents.
+  // Show landing for guests; allow search without login and prefill after login.
   if (!isAuthenticated) {
     return (
       <Landing
@@ -2692,7 +2698,7 @@ function App() {
           if (data && typeof data === 'object') {
             setPendingSearch(data);
           }
-          setShowLogin(true);
+          // Do not force login here; let users browse. Login will be required only on booking.
         }}
       />
     );
@@ -2773,8 +2779,8 @@ function App() {
                 }}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                   isDark 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800' 
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800' 
+                    : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800'
                 }`}
                 title="Install Turbo Transit App"
               >
@@ -2931,7 +2937,7 @@ function App() {
                 </div>
                 <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
                   <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Price</p>
-                  <p className={`font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>₹{selectedService.pricePerTon}/ton</p>
+                  <p className={`font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>₹{selectedService.pricePerTon}/ton</p>
                 </div>
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Quantity (tons)</label>
@@ -3107,7 +3113,7 @@ function App() {
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <button
                   onClick={() => { setBookingSuccess(null); setCurrentView('bookings'); }}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
                 >
                   View My Bookings
                 </button>

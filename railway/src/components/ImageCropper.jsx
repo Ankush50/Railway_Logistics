@@ -375,7 +375,7 @@ const ImageCropper = ({ imageFile, onCrop, onCancel, isDark = false }) => {
             <button
               onClick={handleCrop}
               disabled={!imageLoaded}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="h-4 w-4 mr-2" />
               Apply Crop

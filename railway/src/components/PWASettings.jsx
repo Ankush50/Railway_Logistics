@@ -126,7 +126,7 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${
                 isDark ? 'bg-blue-900/20' : 'bg-blue-100'
               }`}>
-                <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Settings className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -151,7 +151,7 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
 
           {isLoading ? (
             <div className="text-center py-12">
-              <RefreshCw className="mx-auto h-8 w-8 animate-spin text-blue-600 mb-4" />
+              <RefreshCw className="mx-auto h-8 w-8 animate-spin text-red-600 mb-4" />
               <p className={`${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Loading PWA settings...</p>
             </div>
           ) : (
@@ -232,7 +232,7 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                           notificationPermission === 'granted'
                             ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-red-600 text-white hover:bg-red-700'
                         }`}
                       >
                         {notificationPermission === 'granted' ? 'Enabled' : 'Enable'}
@@ -277,7 +277,7 @@ const PWASettings = ({ isDark, isOpen, onClose }) => {
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         periodicSyncEnabled
                           ? 'bg-gray-600 text-white hover:bg-gray-700'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-red-600 text-white hover:bg-red-700'
                       }`}
                     >
                       {periodicSyncEnabled ? 'Disable' : 'Enable'}

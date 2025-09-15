@@ -298,7 +298,7 @@ const ProfilePicture = ({ user, isDark = false, onUpdate, size = 'md', showUploa
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className={`px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center`}
+                    className={`px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center`}
                   >
                     {isUploading ? (
                       <>
