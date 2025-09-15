@@ -2688,19 +2688,21 @@ function App() {
     );
   }
 
-  // Show landing for guests; allow search without login and prefill after login.
+  // Show landing for guests; render auth forms when toggled; capture search for prefill after login.
   if (!isAuthenticated) {
     return (
-      <Landing
-        onSignIn={() => setShowLogin(true)}
-        onSignUp={() => setShowLogin(false)}
-        onDiscover={(data) => {
-          if (data && typeof data === 'object') {
-            setPendingSearch(data);
-          }
-          // Do not force login here; let users browse. Login will be required only on booking.
-        }}
-      />
+      <>
+        <Landing
+          onSignIn={() => setShowLogin(true)}
+          onSignUp={() => setShowLogin(false)}
+          onDiscover={(data) => {
+            if (data && typeof data === 'object') {
+              setPendingSearch(data);
+            }
+          }}
+        />
+        {showLogin ? <LoginForm /> : <RegisterForm />}
+      </>
     );
   }
 

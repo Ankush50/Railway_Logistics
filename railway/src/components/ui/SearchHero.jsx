@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Input, Select, Button, Card } from "./Primitives";
 
 const SearchHero = ({ onSearch }) => {
-	const [form, setForm] = useState({ from: "", to: "", mode: "FCL", date: "" });
+	const [form, setForm] = useState({ from: "", to: "", date: "", weight: "" });
 
 	const handleChange = (e) => {
 		setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -24,24 +24,18 @@ const SearchHero = ({ onSearch }) => {
 						</div>
 						<div className="md:col-span-1">
 							<label className="block text-xs text-gray-600 mb-1">Deliver to Port or City</label>
-							<Input name="to" placeholder="Monrovia" value={form.to} onChange={handleChange} />
+							<Input name="to" placeholder="Mumbai" value={form.to} onChange={handleChange} />
 						</div>
 						<div className="md:col-span-1">
-							<label className="block text-xs text-gray-600 mb-1">Mode</label>
-							<Select name="mode" value={form.mode} onChange={handleChange}>
-								<option value="FCL">FCL</option>
-								<option value="LCL">LCL</option>
-								<option value="Air">Air</option>
-								<option value="Rail">Rail</option>
-								<option value="Trailer">Trailer</option>
-							</Select>
+							<label className="block text-xs text-gray-600 mb-1">Weight (tons)</label>
+							<Input type="number" name="weight" placeholder="10" value={form.weight} onChange={handleChange} />
 						</div>
 						<div className="md:col-span-1">
 							<label className="block text-xs text-gray-600 mb-1">When</label>
 							<Input type="date" name="date" value={form.date} onChange={handleChange} />
 						</div>
 						<div className="md:col-span-1">
-							<Button type="submit" className="w-full">Discover Shipping Price</Button>
+							<Button type="submit" className="w-full">Discover Price (₹)</Button>
 						</div>
 					</form>
 				</Card>
