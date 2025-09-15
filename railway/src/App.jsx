@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, Suspense, lazy } from "react";
+import Landing from "./pages/Landing";
 import StatusChain from "./components/StatusChain";
 import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
@@ -457,6 +458,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
+  const [pendingSearch, setPendingSearch] = useState(null);
 
   // UI states
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -501,6 +503,19 @@ function App() {
       checkAuthStatus();
     }
   }, []);
+
+  // When user logs in and we have a pending search from landing, switch to search and prefill
+  useEffect(() => {
+    if (isAuthenticated && pendingSearch) {
+      setCurrentView("search");
+      try {
+        // Delay a tick to ensure SearchInterface is mounted
+        setTimeout(() => {
+          setSearchResults([]);
+        }, 0);
+      } catch (_) {}
+    }
+  }, [isAuthenticated, pendingSearch]);
 
   // Periodic refresh of user data to ensure changes are reflected across devices
   useEffect(() => {
@@ -727,7 +742,7 @@ function App() {
     };
 
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-brand-red-700 via-brand-red-800 to-gray-900">
         <div className="pointer-events-none absolute inset-0 opacity-20">
           <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-blue-300 blur-3xl animate-pulse" />
           <div className="absolute top-1/3 -right-16 w-64 h-64 rounded-full bg-indigo-400 blur-3xl animate-bounce" style={{animationDuration:'6s'}} />
@@ -735,8 +750,8 @@ function App() {
         </div>
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="h-8 w-8 text-blue-600" />
+            <div className="bg-brand-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogIn className="h-8 w-8 text-brand-red-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
             <p className="text-gray-600 mt-2">Sign in to your account</p>
@@ -756,7 +771,7 @@ function App() {
               <input
                 type="text"
                 placeholder="Enter your username"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                 value={loginForm.username}
                 onChange={(e) =>
                   setLoginForm({ ...loginForm, username: e.target.value })
@@ -773,7 +788,7 @@ function App() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                   value={loginForm.password}
                   onChange={(e) =>
                     setLoginForm({ ...loginForm, password: e.target.value })
@@ -798,7 +813,7 @@ function App() {
             <button
               onClick={handleLogin}
               disabled={loginLoading}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-brand-red-600 text-white py-3 px-6 rounded-lg hover:bg-brand-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {loginLoading ? (
                 <>
@@ -816,7 +831,7 @@ function App() {
               Don't have an account?{" "}
               <button
                 onClick={() => setShowLogin(false)}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-brand-red-600 hover:text-brand-red-800 font-medium"
               >
                 Sign up
               </button>
@@ -884,7 +899,7 @@ function App() {
     };
 
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-green-900 via-green-800 to-emerald-900">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-6 bg-gradient-to-br from-brand-red-700 via-brand-red-800 to-gray-900">
         {/* Animated doodles background */}
         <div className="pointer-events-none absolute inset-0 opacity-20">
           <div className="absolute -top-10 -right-10 w-72 h-72 rounded-full bg-emerald-300 blur-3xl animate-pulse" />
@@ -893,8 +908,8 @@ function App() {
         </div>
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserPlus className="h-8 w-8 text-green-600" />
+            <div className="bg-brand-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UserPlus className="h-8 w-8 text-brand-red-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
             <p className="text-gray-600 mt-2">
@@ -916,7 +931,7 @@ function App() {
               <input
                 type="text"
                 placeholder="Enter your full name"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                 value={registerForm.name}
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, name: e.target.value })
@@ -932,7 +947,7 @@ function App() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                 value={registerForm.email}
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, email: e.target.value })
@@ -948,7 +963,7 @@ function App() {
               <input
                 type="text"
                 placeholder="Choose a username"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                 value={registerForm.username}
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, username: e.target.value })
@@ -965,7 +980,7 @@ function App() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
-                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                   value={registerForm.password}
                   onChange={(e) =>
                     setRegisterForm({ ...registerForm, password: e.target.value })
@@ -995,7 +1010,7 @@ function App() {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm your password"
-                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                   value={registerForm.confirmPassword}
                   onChange={(e) =>
                     setRegisterForm({
@@ -1025,7 +1040,7 @@ function App() {
                 Account Type
               </label>
               <select
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-red-600 focus:border-transparent"
                 value={registerForm.role}
                 onChange={(e) =>
                   setRegisterForm({ ...registerForm, role: e.target.value })
@@ -1039,7 +1054,7 @@ function App() {
             <button
               onClick={handleRegister}
               disabled={registerLoading}
-              className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-brand-red-600 text-white py-3 px-6 rounded-lg hover:bg-brand-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {registerLoading ? (
                 <>
@@ -1069,13 +1084,18 @@ function App() {
   };
 
   // Search Component
-  const SearchInterface = () => {
+  const SearchInterface = ({ initialForm }) => {
     const [searchForm, setSearchForm] = useState({
       from: "",
       to: "",
       date: "",
       weight: "",
     });
+    useEffect(() => {
+      if (initialForm) {
+        setSearchForm(prev => ({ ...prev, ...initialForm }));
+      }
+    }, [initialForm]);
     const [searchLoading, setSearchLoading] = useState(false);
 
     const handleSearch = async () => {
@@ -1102,8 +1122,8 @@ function App() {
           <h2 className={`text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center ${
             isDark ? 'text-white' : 'text-gray-800'
           }`}>
-            <div className="bg-blue-100 dark:bg-blue-900/20 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
-              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+            <div className="bg-brand-red-100 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-brand-red-600" />
             </div>
             Find Railway Services
           </h2>
@@ -1121,7 +1141,7 @@ function App() {
                   id="search-from"
                   type="text"
                   placeholder="Origin city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -1146,7 +1166,7 @@ function App() {
                   id="search-to"
                   type="text"
                   placeholder="Destination city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -1170,7 +1190,7 @@ function App() {
                 <input
                   id="search-date"
                   type="date"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -1195,7 +1215,7 @@ function App() {
                   id="search-weight"
                   type="number"
                   placeholder="Weight needed"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
@@ -1212,7 +1232,7 @@ function App() {
               <button
                 onClick={handleSearch}
                 disabled={searchLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 sm:py-4 px-6 sm:px-8 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-brand-red-600 hover:bg-brand-red-700 text-white py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {searchLoading ? (
                   <>
@@ -2662,9 +2682,20 @@ function App() {
     );
   }
 
-  // Show authentication forms if not logged in
+  // Show landing for guests; CTA opens auth forms. Capture search intents.
   if (!isAuthenticated) {
-    return showLogin ? <LoginForm /> : <RegisterForm />;
+    return (
+      <Landing
+        onSignIn={() => setShowLogin(true)}
+        onSignUp={() => setShowLogin(false)}
+        onDiscover={(data) => {
+          if (data && typeof data === 'object') {
+            setPendingSearch(data);
+          }
+          setShowLogin(true);
+        }}
+      />
+    );
   }
 
   return (
@@ -2831,7 +2862,7 @@ function App() {
       {/* Main Content */}
       <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-6 transition-all duration-300`}>
         <div className="px-4 sm:px-6 lg:px-8">
-          {currentView === "search" && <SearchInterface />}
+          {currentView === "search" && <SearchInterface initialForm={pendingSearch} />}
           {currentView === "admin" && <AdminPanel />}
           {currentView === "bookings" && <BookingInterface />}
           {currentView === "archived-bookings" && <ArchivedBookingInterface />}
