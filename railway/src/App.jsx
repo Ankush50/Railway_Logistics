@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef, createContext, useContext, Suspense, lazy } from "react";
 import Landing from "./pages/Landing";
 import StatusChain from "./components/StatusChain";
 import ProfilePicture from "./components/ProfilePicture";
@@ -1116,14 +1116,12 @@ function App() {
 
     return (
       <div className="max-w-6xl mx-auto">
-        <div className={`rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8 transition-colors duration-300 ${
+        <div className={`rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 mb-10 ring-1 ring-black/5 transition-colors duration-300 ${
           isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
         }`}>
-          <h2 className={`text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
-            <div className="bg-brand-red-100 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
-              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-brand-red-600" />
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-rose-500 mb-8 sm:mb-10 flex items-center">
+            <div className="bg-brand-red-100 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mr-4 sm:mr-5">
+              <Search className="h-6 w-6 sm:h-7 sm:w-7 text-brand-red-600" />
             </div>
             Find Railway Services
           </h2>
@@ -1232,16 +1230,16 @@ function App() {
               <button
                 onClick={handleSearch}
                 disabled={searchLoading}
-                className="w-full bg-brand-red-600 hover:bg-brand-red-700 text-white py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-4 sm:py-5 px-8 sm:px-10 rounded-2xl transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5"
               >
                 {searchLoading ? (
                   <>
-                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
                     Searching...
                   </>
                 ) : (
                   <>
-                    <Search className="mr-3 h-5 w-5" />
+                    <Search className="mr-3 h-6 w-6" />
                     Search Services
                   </>
                 )}
@@ -1252,14 +1250,12 @@ function App() {
 
         {/* Search Results */}
         {searchResults.length > 0 && (
-          <div className={`rounded-2xl shadow-xl p-8 transition-colors duration-300 ${
+          <div className={`rounded-3xl shadow-2xl p-8 ring-1 ring-black/5 transition-colors duration-300 ${
             isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
           }`}>
-            <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-              isDark ? 'text-white' : 'text-gray-800'
-            }`}>
-              <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
-                <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-8 flex items-center bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-emerald-600">
+              <div className="bg-emerald-100 dark:bg-emerald-900/20 w-12 h-12 rounded-2xl flex items-center justify-center mr-4">
+                <Package className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               Available Services
             </h3>
@@ -2688,6 +2684,21 @@ function App() {
     );
   }
 
+  // Auto-scroll to auth section when toggling login/register from landing
+  const authSectionRef = useRef(null);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      try {
+        if (authSectionRef.current) {
+          authSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // Fallback: scroll to bottom
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+      } catch (_) {}
+    }
+  }, [showLogin, isAuthenticated]);
+
   // Show landing for guests; render auth forms when toggled; capture search for prefill after login.
   if (!isAuthenticated) {
     return (
@@ -2701,6 +2712,7 @@ function App() {
             }
           }}
         />
+        <div ref={authSectionRef} />
         {showLogin ? <LoginForm /> : <RegisterForm />}
       </>
     );
@@ -2729,7 +2741,7 @@ function App() {
 
           {/* Page title */}
           <div className="flex-1 text-center lg:text-left">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-rose-500">
               {currentView === "search" && "Search Services"}
               {currentView === "bookings" && (currentUser?.role === 'admin' ? "User Bookings" : "My Bookings")}
               {currentView === "admin" && "Admin Panel"}
@@ -2868,7 +2880,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-6 transition-all duration-300`}>
+      <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-8 sm:py-10 transition-all duration-300`}>
         <div className="px-4 sm:px-6 lg:px-8">
           {currentView === "search" && <SearchInterface initialForm={pendingSearch} />}
           {currentView === "admin" && <AdminPanel />}
