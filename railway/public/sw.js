@@ -1,6 +1,6 @@
-const CACHE_NAME = 'turbo-transit-v1.1.3';
-const STATIC_CACHE = 'turbo-transit-static-v1.1.3';
-const DYNAMIC_CACHE = 'turbo-transit-dynamic-v1.1.3';
+const CACHE_NAME = 'turbo-transit-v1.1.4';
+const STATIC_CACHE = 'turbo-transit-static-v1.1.4';
+const DYNAMIC_CACHE = 'turbo-transit-dynamic-v1.1.4';
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -75,12 +75,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle static assets
-  if (request.destination === 'image' || 
-      request.destination === 'script' || 
-      request.destination === 'style' ||
-      request.destination === 'font') {
+  // Handle static assets (do NOT cache JS/CSS to avoid stale module chunks)
+  if (request.destination === 'image' || request.destination === 'font') {
     event.respondWith(handleStaticAsset(request));
+    return;
+  }
+
+  // Always fetch JS and CSS from network to prevent MIME/module errors after deploy
+  if (request.destination === 'script' || request.destination === 'style') {
+    event.respondWith(fetch(request));
     return;
   }
 
