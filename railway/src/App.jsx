@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useContext, Suspense, lazy } from "react";
 import Landing from "./pages/Landing";
+import { Header as LandingHeader, Hero as LandingHero, Features as LandingFeatures, HowItWorks as LandingHowItWorks, Industries as LandingIndustries, SearchHero as LandingSearchHero, Footer as LandingFooter } from "./components/ui";
 import StatusChain from "./components/StatusChain";
 import ProfilePicture from "./components/ProfilePicture";
 import NotificationBell from "./components/NotificationBell";
@@ -65,6 +66,7 @@ import {
   uploadProfilePicture,
   downloadReceiptPdf,
 } from "./api";
+import { Input as UIInput, Button as UIButton, Card as UICard } from "./components/ui/Primitives";
 import { payForBooking } from "./utils/payment";
 
 // Theme Context
@@ -1116,137 +1118,10 @@ function App() {
 
     return (
       <div className="max-w-6xl mx-auto">
-        <div className={`rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 mb-10 ring-1 ring-black/5 transition-colors duration-300 ${
-          isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-        }`}>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-rose-500 mb-8 sm:mb-10 flex items-center">
-            <div className="bg-brand-red-100 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mr-4 sm:mr-5">
-              <Search className="h-6 w-6 sm:h-7 sm:w-7 text-brand-red-600" />
-            </div>
-            Find Railway Services
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div>
-              <label htmlFor="search-from" className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                From
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="search-from"
-                  type="text"
-                  placeholder="Origin city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                  value={searchForm.from}
-                  onChange={(e) =>
-                    setSearchForm({ ...searchForm, from: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="search-to" className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                To
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="search-to"
-                  type="text"
-                  placeholder="Destination city"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                  value={searchForm.to}
-                  onChange={(e) =>
-                    setSearchForm({ ...searchForm, to: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="search-date" className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                Date
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="search-date"
-                  type="date"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                  value={searchForm.date}
-                  onChange={(e) =>
-                    setSearchForm({ ...searchForm, date: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="search-weight" className={`block text-sm font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                Weight (tons)
-              </label>
-              <div className="relative">
-                <Package className="absolute left-3 top-3 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="search-weight"
-                  type="number"
-                  placeholder="Weight needed"
-                  className={`pl-12 w-full p-4 border rounded-xl focus:ring-2 focus:ring-brand-red-600 focus:border-transparent transition-all duration-200 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                  value={searchForm.weight}
-                  onChange={(e) =>
-                    setSearchForm({ ...searchForm, weight: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="sm:col-span-2 lg:col-span-4">
-              <button
-                onClick={handleSearch}
-                disabled={searchLoading}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-4 sm:py-5 px-8 sm:px-10 rounded-2xl transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5"
-              >
-                {searchLoading ? (
-                  <>
-                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-3 h-6 w-6" />
-                    Search Services
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        <LandingSearchHero onSearch={(form) => {
+          setSearchForm(prev => ({ ...prev, ...form }));
+          setTimeout(() => handleSearch(), 0);
+        }} />
 
         {/* Search Results */}
         {searchResults.length > 0 && (
@@ -2880,13 +2755,43 @@ function App() {
       )}
 
       {/* Main Content */}
-      <main className={`${sidebarOpen ? 'lg:ml-64' : ''} py-8 sm:py-10 transition-all duration-300`}>
-        <div className="px-4 sm:px-6 lg:px-8">
-          {currentView === "search" && <SearchInterface initialForm={pendingSearch} />}
-          {currentView === "admin" && <AdminPanel />}
-          {currentView === "bookings" && <BookingInterface />}
-          {currentView === "archived-bookings" && <ArchivedBookingInterface />}
-        </div>
+      <main className={`${sidebarOpen ? 'lg:ml-64' : ''} transition-all duration-300`}>
+        {currentView === "search" ? (
+          <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+            <LandingHeader onSignIn={() => setShowProfileModal(true)} onSignUp={() => setShowProfileModal(true)} />
+            <main>
+              <LandingHero onDiscover={() => {
+                try {
+                  const el = document.getElementById('search-hero');
+                  el && el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (_) {}
+              }} />
+              <div className="px-4 sm:px-6 lg:px-8">
+                <LandingSearchHero onSearch={(form) => {
+                  if (form && typeof form === 'object') {
+                    setPendingSearch(form);
+                    // Reuse existing search logic
+                    setCurrentView('search');
+                  }
+                }} />
+              </div>
+              <LandingFeatures />
+              <LandingHowItWorks />
+              <LandingIndustries />
+            </main>
+            <LandingFooter onSignUp={() => setShowProfileModal(true)} />
+            <div className="px-4 sm:px-6 lg:px-8">
+              {/* Keep original search and results below landing UI for functionality without changing landing components */}
+              <SearchInterface initialForm={pendingSearch} />
+            </div>
+          </div>
+        ) : (
+          <div className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+            {currentView === "admin" && <AdminPanel />}
+            {currentView === "bookings" && <BookingInterface />}
+            {currentView === "archived-bookings" && <ArchivedBookingInterface />}
+          </div>
+        )}
       </main>
 
       {/* Profile Modal */}
